@@ -375,9 +375,11 @@ Deployment の strategy は、コンテナイメージなどを変更してア�
 一方 Kubernetes におけるデフォルトの戦略は Rolling という戦略です。 Rolling の場合は、先に新しい Pod が作られてからネットワークのルーティング先を変更するイメージで切り替えが行われます。Rolling はダウンタイムを発生させないための戦略です。
 
 では、なぜ Recreate を指定しているのでしょうか。
-ステートを持つモノリスの場合、ブロックストレージをマウントしているケースがあります。ブロックストレージは安全のために単一の VM からしかマウントできないので、Rolling 戦略を実行してしまうと、別の Node に新しい Pod がスケジュールされたケースでは Pod が起動できなくなります（仮にできたとしてもアプリケーションが複数起動できるかは別問題として存在）。これを避けるために Recreate を指定していることとします。
+ステートを持つモノリスの場合、ブロックストレージをマウントしているケースがあります。ブロックストレージは安全のために単一の VM からしかマウントできないので、Rolling 戦略を実行してしまうと、別の Node に新しい Pod がスケジュールされたケースでは Pod が起動できなくなります（仮にできたとしてもアプリケーションが複数起動できるかは別問題として存在）。これを避けるために Recreate を指定しています。
 
-では、手元に Manifest を準備しましょう。
+## 3.3 モノリスアプリケーションのデプロイ
+
+デプロイを行うために手元に Manifest を準備しましょう。
 
 ```
 cd /projects
@@ -386,11 +388,138 @@ cd msa-guide/manifest
 cat monolith.yaml
 ```
 
-CodeReadyWorkspaces の左下の WORKSPACE のペインから開いていくとエディタ上で表示することもできます。
+ダウンロードしたファイルは、CodeReadyWorkspaces の左下の WORKSPACE のペインから開いてGUI上で表示することもできます。
 
 ![monolith4.png](./monolith4.png)
 
-## 3.3 モノリスアプリケーションのデプロイ
+それではモノリスアプリケーションをデプロイしていきましょう。３通りの方法があります。
+
+Kubernetes Way
+```
+kubectl apply -f monolith.yaml
+```
+
+OpenShift Way
+```
+oc apply -f monolith.yaml
+```
+
+Web Console から
+
+![monolith5.png](./monolith5.png)
+
+どれも結果は同一になります。確認してみましょう。
+
+Kubernetes Way
+```
+kubectl get all
+```
+
+OpenShift Way
+```
+oc get all
+```
+
+Web Console から
+
+![monolith6.png](./monolith6.png)
+
+---
+
+## 3.4 モノリスアプリケーションへのアクセス
+
+### 3.4.1 Service の動作確認 
+ではデプロイで来たモノリスアプリケーションの動作を確認してみましょう。
+
+```
+echo monolith.${USER_NAME}-monolith.svc
+curl http://monolith.${USER_NAME}-monolith.svc
+```
+
+結果
+```
+[jboss@workspacefj04s6sm57jsfjaz manifest]$ echo monolith.${USER_NAME}-monolith.svc
+monolith.user1-monolith.svc
+[jboss@workspacefj04s6sm57jsfjaz manifest]$ curl http://monolith.${USER_NAME}-monolith.svc
+<!DOCTYPE html>
+<html>
+        <head>
+                <title>MicroService Demo</title>
+        </head>
+        <body>
+        <form action="/index.php" method="POST">
+                <input type="checkbox" value="200" name="item[]" />Pizza&nbsp;&nbsp;&nbsp;200<br/><input type="checkbox" value="150" name="item[]" />Ola&nbsp;&nbsp;&nbsp;150<br/><input type="checkbox" value="200" name="item[]" />Movie&nbsp;&nbsp;&nbsp;200<br/>      <br/>
+        <input type="submit" Value="Buy" name="buy" onclick="showInput()"/>
+        </form>
+        </body>
+</html>
+```
+
+Kubernetes においては Service の名称と Namespace の名称を組み合わせて内部DNSのAレコードとして解決することができます。
+
+```
+my-svc.my-namespace.svc.cluster.local
+```
+
+詳しくは下記URLを参照してください。
+
+https://kubernetes.io/ja/docs/concepts/services-networking/dns-pod-service/
+
+以下のような省略も可能です。
+
+同一 Project(Namespace) 内では Service名のみでOK
+
+```
+my-svc
+```
+
+異なる Project(Namespace) では、cluster.local が省略可能
+
+```
+my-svc.my-namespace.svc
+```
+
+### 3.4.2 Route の追加と動作確認
+
+Service 名でアクセスが可能なのは同一 Kubernetes 内に限定されます。
+OpenShift においては クラスタ外から Pod にアクセスする方法はいくつかあります。
+
+- type: Load Balancer の Service を利用する
+- External IP, NodePort の Serviceを利用する
+- Router,Ingressを利用する
+
+httpアクセスの場合は Router を利用するのが便利です。では Route リソースをつくってみましょう。
+
+```
+oc expose service monolith
+```
+
+URLの確認方法
+
+CLIから
+```
+oc get route monolith
+```
+
+出力結果
+```
+[jboss@workspacefj04s6sm57jsfjaz projects]$ oc get route
+NAME       HOST/PORT                                                     PATH   SERVICES   PORT   TERMINATION   WILDCARD
+monolith   monolith-user1-monolith.apps.xxx.ocp1.openshiftapps.com          monolith   8080                 None
+```
+
+Web Console から
+
+![monolith7.png](./monolith7.png)
+
+URLをブラウザーで開いた状態
+
+![monolith8.png](./monolith8.png)
+
+
+
+
+
 
 
 
