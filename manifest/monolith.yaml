@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monolith
+  labels:
+    app: monolith
+    app.kubernetes.io/component: monolith
+    app.kubernetes.io/instance: monolith
+    app.kubernetes.io/name: monolith
+    app.kubernetes.io/part-of: monolith
+    app.openshift.io/runtime: spring-boot 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monolith
+  template:
+    metadata:
+      labels:
+        app: monolith
+    spec:
+      containers:
+      - name: monolith-service
+        image: image-registry.openshift-image-registry.svc:5000/lab-infra/monolith-service:latest
+        ports:
+         - containerPort: 8081
+           protocol: TCP
+      - name: monolith-ui
+        image: image-registry.openshift-image-registry.svc:5000/lab-infra/monolith-ui:latest
+        ports:
+         - containerPort: 8080
+           protocol: TCP
+  strategy:
+    type: Recreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monolith
+spec:
+  selector:
+    app: monolith
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
