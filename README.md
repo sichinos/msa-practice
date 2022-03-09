@@ -21,7 +21,7 @@ OpenShiftのWeb Consoleにログインしましょう。URLとユーザー/パ�
 Developer パースペクティブへようこそというダイアログが出ればログインは成功です。ツアーはスキップしてください。
 
 ---
-### 2-3. CodeReadyWorkspaces ログイン
+### 2-2. CodeReadyWorkspaces ログイン
 
 今回のハンズオンは、簡単なモノリスを分解してJavaを利用したマイクロサービスをビルド・デプロイという体験を含んでいます。お手元にJavaの環境がなかったり、コーディングの経験がなくてもスムーズに進められるようにCodeReadyWorspacesというWebIDEを利用します。
 
@@ -65,9 +65,45 @@ Terminalを起動するために画面右側のキューブのマークをクリ
 ![crd8.png](./crd8.png)
 
 このTerminalはOpenShift上のLinuxコンテナにリモートシェルで接続しているようなものと考えてください。そのためコマンドはRed Hat Enterprise Linux基準になります。
+起動しているShellはBashなのでコマンドのタブ補完が可能です。
 
-コンテナであることを確認するためにいくつかのコマンドを実行してみましょう。
+---
+### 2-3.OpenShiftへのCLI ログイン
 
+OpenShift Web Consoleの画面の右上のユーザー名の部分をクリックして、ログインコマンドのコピーを選択してください。これまで通りログインメソッドは lab-login を選択してください。
+
+![cli-login1.png](./cli-login1.png)
+
+Display Token という文字が表示されるのでクリックしてください。
+
+![cli-login2.png](./cli-login2.png)
+
+Loginコマンドが表示されるので oc から始まる文字列をコピーしてください。
+
+![cli-login3.png](./cli-login3.png)
+
+CodeReadyWorkspacesのTerminalに戻って、コピーしてログインコマンドをはりつけてエンターキーを押してください。
+このように表示されればログインは完了です。
+
+出力
+```
+[jboss@workspacefj04s6sm57jsfjaz quarkus-quickstarts]$ oc login --token=sha256~nTF1VCPiraXSCxXwmdAnZjYlf7gI2TAmH43JvU7RQXM --server=https://api.xxxx.ocp1.openshiftapps.com:6443
+Logged into "https://api.xxxx.ocp1.openshiftapps.com:6443" as "user1" using the token provided.
+
+You have one project on this server: "user1-codeready"
+
+Using project "user1-codeready".
+Welcome! See 'oc help' to get started.
+```
+
+ここまでで一旦皆さんの到着をまちます。
+
+---
+### Option 2-4 寄り道
+ここで作業の早い方向けの寄り道をしてみましょう。
+まず、CodeReadyWorkspacesのTerminalがコンテナ内にあることを確認するためにいくつかのコマンドを実行してみましょう。
+
+実行コマンド
 ```
 cat /etc/redhat-release
 ```
@@ -75,11 +111,11 @@ cat /etc/redhat-release
 ```
 [jboss@workspacefj04s6sm57jsfjaz quarkus-quickstarts]$ cat /etc/redhat-release 
 Red Hat Enterprise Linux release 8.5 (Ootpa)
-[jboss@workspacefj04s6sm57jsfjaz quarkus-quickstarts]$ ls /
-bin   dev  home  lib64       lost+found  mnt  proc      public-certs  run   srv  tmp  var
-boot  etc  lib   lombok.jar  media       opt  projects  root          sbin  sys  usr  workspace_logs
 ```
 
+一見するとRHEL8.5のようにみえます。通常のマシンと区別は付きません。
+
+実行コマンド
 ```
 ls /
 ```
@@ -90,26 +126,168 @@ bin   dev  home  lib64       lost+found  mnt  proc      public-certs  run   srv 
 boot  etc  lib   lombok.jar  media       opt  projects  root          sbin  sys  usr  workspace_logs
 ```
 
+Linuxを普段触っている方にとってはおおよそ見慣れたディレクトリが並んでいるように見えることでしょう。こちらでも通常のマシンとの区別はつきません。
+
+実行コマンド
 ```
-top
+ps aux
 ```
 出力
 ```
-top - 06:56:01 up 28 days, 21:16,  0 users,  load average: 0.13, 0.24, 0.40
-Tasks:   4 total,   1 running,   3 sleeping,   0 stopped,   0 zombie
-%Cpu(s):  5.2 us,  3.3 sy,  0.0 ni, 90.3 id,  0.0 wa,  0.8 hi,  0.4 si,  0.0 st
-MiB Mem :  15728.8 total,    648.0 free,   6550.2 used,   8530.6 buff/cache
-MiB Swap:      0.0 total,      0.0 free,      0.0 used.   8800.2 avail Mem 
-
-    PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND                                                                          
-      1 jboss     20   0   23056   1456   1268 S   0.0   0.0   0:00.05 tail                                                                             
-     32 jboss     20   0   11924   2780   2520 S   0.0   0.0   0:00.00 bash                                                                             
-     38 jboss     20   0   39020  23408   3160 S   0.0   0.1   0:00.15 bash                                                                             
-     91 jboss     20   0   56328   4068   3444 R   0.0   0.0   0:00.00 top  
+[jboss@workspacefj04s6sm57jsfjaz quarkus-quickstarts]$ ps aux
+USER         PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+jboss          1  0.0  0.0  23056  1456 ?        Ss   Mar08   0:01 /usr/bin/coreutils --coreutils-prog-shebang=tail /usr/bin/tail -f /dev/null
+jboss         32  0.0  0.0  11924  2780 pts/0    Ss   Mar08   0:00 /bin/bash -c cd /projects/quarkus-quickstarts; /bin/bash
+jboss         38  0.0  0.1  39020 23408 pts/0    S    Mar08   0:00 /bin/bash
+jboss         95  0.0  0.0  51868  3660 pts/0    R+   00:49   0:00 ps aux
 ```
 
-top画面は q を押して抜けてください。
-PID 1のプロセスは通常のマシンであれば init になるはずですが tail になっています。コンテナを起動し続けるためには
+通常のマシンでこのコマンドを実行すると大量のプロセスが見つかるはずですが、psコマンド自体をいれてもたったの４つしか表示されません。
+特にPID 1のプロセスに注目してください。通常のマシンであればPID 1は init になるはずです。しかし、ここはコンテナの中なので tail プロセスになっているのが特徴的です。
+
+次に oc コマンドで何が起きたかを見てみましょう。
+
+実行コマンド
+```
+cat  cat ~/.kube/config 
+```
+
+結果
+```
+apiVersion: v1
+clusters:
+- cluster:
+    server: https://api.xxxx.ocp1.openshiftapps.com:6443
+  name: api-xxxx-ocp1-openshiftapps-com:6443
+contexts:
+- context:
+    cluster: api-xxxx-ocp1-openshiftapps-com:6443
+    namespace: user1-codeready
+    user: user1/api-xxxx-ocp1-openshiftapps-com:6443
+  name: user1-codeready/api-xxxx-ocp1-openshiftapps-com:6443/user1
+current-context: user1-codeready/api-xxxx-ocp1-openshiftapps-com:6443/user1
+kind: Config
+preferences: {}
+users:
+- name: user1/api-xxxx-ocp1-openshiftapps-com:6443
+  user:
+    token: sha256~nTF1VCPiraXSCxXwmdAnZjYlf7gI2TAmH43JvU7RQXM
+```
+
+これはKubeconfigと呼ばれるファイルです。KuberenetesへAPIを発行する場合、予めこのファイルを自分で用意しておく必要があります。oc loginコマンドは、 oAuth を通して token を得た後にこのファイルを所定の位置に配置することで、以降の Kubernetes の API サーバーへの通信を可能にしています。
+
+kubeconfigについての詳細は下記のURLを御覧ください。
+
+https://kubernetes.io/ja/docs/concepts/configuration/organize-cluster-access-kubeconfig/
+
+この Terminl からは Kubernetes のコントロールコマンドである kubectl も実行することができます。
+
+コマンド
+```
+kubectl config view
+```
+
+先ほどと同じ内容が見えたはずです。
+
+---
+## ３. モノリスアプリケーションのデプロイ
+
+OpenShift へのログインが完了したら、いよいよモノリスをデプロイしていきます。
+モノリスデプロイでは OpenShift がKubernetes 互換であることを確認していくために、oc コマンドではなくkubectl （Kubernetesのコントロールコマンド）をつかってデプロイを行っていきます。
+
+ここで利用するモノリスアプリケーションは、このような構造をしています。
+
+![monolith1.png](./monolith1.png)
+
+---
+## 3.1 Manifestを用意する
+
+Manifest とは Kubernetes に行いたい設定を記述したファイルのことをいいます。 YAML 形式と JSON 形式が使えますが、一般的に YAML を使うことが多いので、 Manifest の別の呼び方として YAML ファイルと呼んだりすることもあります。
+
+Kubernetes アプリをデプロイする最も基本的な流れは以下のような順序になります。
+
+1. アプリケーションを用意する
+1. Docker ファイルを準備する
+1. Docker Build を実行してアプリケーションイメージを作る
+1. アプリケーションイメージを、Kubernetes の利用するレジストリに登録( Push )する
+1. Manifest を用意する
+1. Manifest をKubernetesに適用する
+1. Kubernetes が Manifest に従ってアプリケーション Pod を起動する
+
+モノリスアプリケーションのデプロイでは、１〜４は完了しており Kubernetes にデプロイするばかりという状況から実施していきます。
+
+ここで利用する Manifest は以下のような内容になっています。
+
+monolith.yaml
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: monolith
+  labels:
+    app: monolith
+    app.kubernetes.io/component: monolith
+    app.kubernetes.io/instance: monolith
+    app.kubernetes.io/name: monolith
+    app.kubernetes.io/part-of: monolith
+    app.openshift.io/runtime: spring-boot 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: monolith
+  template:
+    metadata:
+      labels:
+        app: monolith
+    spec:
+      containers:
+      - name: monolith-service
+        image: image-registry.openshift-image-registry.svc:5000/lab-infra/monolith-service:latest
+        ports:
+         - containerPort: 8081
+           protocol: TCP
+      - name: monolith-ui
+        image: image-registry.openshift-image-registry.svc:5000/lab-infra/monolith-ui:latest
+        ports:
+         - containerPort: 8080
+           protocol: TCP
+  strategy:
+    type: Recreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: monolith
+spec:
+  selector:
+    app: monolith
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+```
+
+いくつかのポイントを確認していきます。
+
+API バージョンと Kind
+```
+apiVersion: apps/v1
+kind: Deployment
+~
+---
+apiVersion: v1
+kind: Service
+```
+
+この Manifest では Deployment　と Service を定義していきます。
+Deployment はアプリケーションをデプロイするうえで最も基本的なリソースになります。
+Service は Deployment から起動される Pod を Kubernetes ネットワークに接続するためのリソースです。
+
+
+
+
+
 
 
 
