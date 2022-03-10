@@ -3,11 +3,11 @@
 Container Stater Kit で実施するハンズオンの手順を紹介します。  
 当ハンズオンによって、簡単なモノリスアプリケーションのマイクロサービスへの分割を体験することができます。
 
+
 ## 1. 【管理者向け】 環境準備
----
 
 ## 2. OpenShiftへのログイン
----
+
 ### 2-1. OpenShiftへのWeb Console ログイン
 
 OpenShiftのWeb Consoleにログインしましょう。URLとユーザー/パスワードは管理者から割り当てられたものを使用してください。
@@ -20,15 +20,14 @@ OpenShiftのWeb Consoleにログインしましょう。URLとユーザー/パ�
 
 Developer パースペクティブへようこそというダイアログが出ればログインは成功です。ツアーはスキップしてください。
 
----
 - [ ] **2-1 Web Console へのログインを完了した**
 
 すべてチェックがついたら次に進んでください
 
----
 ### 2-2. CodeReadyWorkspaces ログイン
 
-今回のハンズオンは、簡単なモノリスを分解してJavaを利用したマイクロサービスをビルド・デプロイという体験を含んでいます。お手元にJavaの環境がなかったり、コーディングの経験がなくてもスムーズに進められるようにCodeReadyWorspacesというWebIDEを利用します。
+今回のハンズオンは、簡単なモノリスを分解してJavaを利用したマイクロサービスをビルド・デプロイという体験を含んでいます。お手元にJavaの環境がなかったり、コーディングの経験がなく
+てもスムーズに進められるようにCodeReadyWorspacesというWebIDEを利用します。
 
 Web Consoleの右上のアプリケーションボタンを押して、CodeReadyWorspacesを選択してください。
 
@@ -72,12 +71,10 @@ Terminalを起動するために画面右側のキューブのマークをクリ
 このTerminalはOpenShift上のLinuxコンテナにリモートシェルで接続しているようなものと考えてください。そのためコマンドはRed Hat Enterprise Linux基準になります。
 起動しているShellはBashなのでコマンドのタブ補完が可能です。
 
----
 - [ ] **2-2 CodeReadyWorkspaces にログインして Terminal を起動した**
 
 すべてチェックがついたら次に進んでください
 
----
 ### 2-3.OpenShiftへのCLI ログイン
 
 OpenShift Web Consoleの画面の右上のユーザー名の部分をクリックして、ログインコマンドのコピーを選択してください。これまで通りログインメソッドは lab-login を選択してください。
@@ -117,7 +114,9 @@ EOF
 ```
 
 ### 2-3-２.プロジェクト作成
-後のためにプロジェクトを作成します。
+
+後のためにプロジェクトを作成します。プロジェクトは Kubernetes でいう Namespace と同じで、リソースの名前を一意にするエリアです。
+xx環境、というようなイメージでしょうか。
 
 ```
 oc new-project ${USER_NAME}-monolith
@@ -127,7 +126,6 @@ oc project ${USER_NAME}-monolith
 
 ここまでで一旦皆さんの到着をまちます。
 
----
 
 - [ ] **2-3 CLIでログインした**
 - [ ] **2-3-1 環境変数を保存した**
@@ -135,9 +133,9 @@ oc project ${USER_NAME}-monolith
 
 すべてチェックがついたら次に進んでください
 
----
 
 ### Option 2-4 寄り道
+
 ここで作業の早い方向けの寄り道をしてみましょう。
 まず、CodeReadyWorkspacesのTerminalがコンテナ内にあることを確認するためにいくつかのコマンドを実行してみましょう。
 
@@ -227,8 +225,6 @@ kubectl config view
 
 先ほどと同じ内容が見えたはずです。
 
----
-
 ## ３. モノリスアプリケーションのデプロイ
 
 OpenShift へのログインが完了したら、いよいよモノリスをデプロイしていきます。
@@ -243,6 +239,7 @@ Apache + PHP と Java VM の２プロセスを必要としています。
 ![monolith2.png](./monolith2.png)
 
 ### FAQ 1
+---
 
 モノリスをコンテナにする際にこういった質問がよくあります。
 
@@ -270,8 +267,6 @@ Kubernetes においてはサイドカーパターンを利用することが正
 ![monolith3.png](./monolith3.png)
 
 サイドカー構成にすることによる端的なメリットとして、ベースイメージが探しやすくなることがあります。apache + PHP 、もしくは Java のみ、といったコンテナイメージはコミュニティが公式イメージとして公開していることが多いですが、両方が入っているコンテナイメージはあまり存在しません。カスタムイメージを作ることも可能ですが、わざわざそこまでするよりはサイドカーパターンを適用するほうが、Kubernetes Way といえます。
-
----
 
 ## 3.1 デプロイに必要なリソースを準備する
 
@@ -378,6 +373,7 @@ Deployment の strategy は、コンテナイメージなどを変更してア�
 ステートを持つモノリスの場合、ブロックストレージをマウントしているケースがあります。ブロックストレージは安全のために単一の VM からしかマウントできないので、Rolling 戦略を実行してしまうと、別の Node に新しい Pod がスケジュールされたケースでは Pod が起動できなくなります（仮にできたとしてもアプリケーションが複数起動できるかは別問題として存在）。これを避けるために Recreate を指定しています。
 
 ## 3.3 モノリスアプリケーションのデプロイ
+---
 
 デプロイを行うために手元に Manifest を準備しましょう。
 
@@ -424,12 +420,16 @@ Web Console から
 
 ![monolith6.png](./monolith6.png)
 
----
 
 ## 3.4 モノリスアプリケーションへのアクセス
 
+
+ここでは OpenShift Kubernetes がどうやって Pod へのアクセス手段を提供しているか見ていきます。
+Service と Route というリソースです。
+
 ### 3.4.1 Service の動作確認 
-ではデプロイで来たモノリスアプリケーションの動作を確認してみましょう。
+
+ではデプロイで来たモノリスアプリケーションの動作を確認してみましょう。 CodeReadyWorkspaces の Terminal 内から curl で確認します。
 
 ```
 echo monolith.${USER_NAME}-monolith.svc
@@ -455,7 +455,10 @@ monolith.user1-monolith.svc
 </html>
 ```
 
-Kubernetes においては Service の名称と Namespace の名称を組み合わせて内部DNSのAレコードとして解決することができます。
+html が表示されたはずです。 
+
+Kubernetes においては Service の名称と Namespace の名称を組み合わせて内部DNSのAレコードとして解決することができます。（Aレコードは ホスト名→IP の対応付けがされている DNS レコード）
+Aレコードは下記のようなルールです。
 
 ```
 my-svc.my-namespace.svc.cluster.local
@@ -479,6 +482,8 @@ my-svc
 my-svc.my-namespace.svc
 ```
 
+
+
 ### 3.4.2 Route の追加と動作確認
 
 Service 名でアクセスが可能なのは同一 Kubernetes 内に限定されます。
@@ -490,6 +495,7 @@ OpenShift においては クラスタ外から Pod にアクセスする方法�
 
 httpアクセスの場合は Router を利用するのが便利です。では Route リソースをつくってみましょう。
 
+CLIから
 ```
 oc expose service monolith
 ```
@@ -516,14 +522,131 @@ URLをブラウザーで開いた状態
 
 ![monolith8.png](./monolith8.png)
 
+#### OpenShift Router とは
+
+OpenShift Router は OpenShift v3 の初期からあった、 OpenShift の外からの通信を Pod に流すための仕組みです。
+実態は HAProxy であるため、やろうと思えばかなり高度な設定ができます。
+
+- L7 ロードバランシング (複数サービスでのA/Bデプロイメント)
+- TSL終端
+- IP White List
+- Rate Limit
+- など多数
+
+一方、 Kubernetes では Ingress を用います。 Ingress は 2015年９月の Kubernetes 1.1.0 以降、alpha/Beta の期間が長かったのですが、 OpenShift はエンタープライズ用途での商業利用を開始していただくために、独自の道を歩んだ時代がありました。
+
+その後、両者は歩み寄っていき、 Kubernetes 上で HAProxy を利用したり、 OpenShift 上で Ingress を利用したり、相互の垣根はどんどんなくなってきています。
 
 
+## 3.5 基本的な運用方法
 
+最も基本的な運用方法として、アプリケーションのログの参照とアプリケーションの再起動の仕方を見ていきましょう。
 
+### 3.5.1 アプリケーションのログの見方
 
+OpenShift や Kubernetes においては、アプリケーションログは標準出力に出力することが推奨されています。標準出力に出力しておくことで、ログの収集や閲覧をオーケストレーター側の機能にまかせることができます。
 
+サンプルのモノリスアプリケーションもログは標準出力に出力しています。ログの内容をみてみましょう。
 
+CLIから
+```
+oc logs deploy/monolith -c monolith-service
 
+```
+サイドカーパターンであるため、-c で対象コンテナを指定していますが、1 Pod 1 Container の場合には、指定する必要はありません。
+
+出力結果
+```
+bash-4.4$ oc logs deploy/monolith -c monolith-service
+Starting the Java application using /opt/jboss/container/java/run/run-java.sh ...
+INFO exec  java -javaagent:/usr/share/java/jolokia-jvm-agent/jolokia-jvm.jar=config=/opt/jboss/container/jolokia/etc/jolokia.properties -XX:+UseParallelGC -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20 -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -XX:+ExitOnOutOfMemoryError -cp "." -jar /deployments/monolithic-1.4.4.RELEASE.jar 
+OpenJDK 64-Bit Server VM warning: If the number of processors is expected to increase from one, then you should configure the number of parallel GC threads appropriately using -XX:ParallelGCThreads=N
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+ :: Spring Boot ::        (v1.4.4.RELEASE)
+
+methods in repositoryRestExceptionHandler
+
+~~
+
+2022-03-09 11:11:37.449  INFO 1 --- [           main] o.s.j.e.a.AnnotationMBeanExporter        : Registering beans for JMX exposure on startup
+2022-03-09 11:11:37.510  INFO 1 --- [           main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8081 (http)
+2022-03-09 11:11:37.516  INFO 1 --- [           main] w.weave.socks.broker.BrokerApplication   : Started BrokerApplication in 4.092 seconds (JVM running for 4.905)
+2022-03-09 11:29:17.997  INFO 1 --- [nio-8081-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring FrameworkServlet 'dispatcherServlet'
+2022-03-09 11:29:17.998  INFO 1 --- [nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : FrameworkServlet 'dispatcherServlet': initialization started
+2022-03-09 11:29:18.013  INFO 1 --- [nio-8081-exec-1] o.s.web.servlet.DispatcherServlet        : FrameworkServlet 'dispatcherServlet': initialization completed in 15 ms
+
+```
+
+Web Console から
+
+![monolith9.png](./monolith9.png)
+
+![monolith10.png](./monolith10.png)
+
+### 3.5.2 アプリケーションの再起動の仕方
+
+次はアプリケーションの再起動の仕方をみていきます。
+OpenShift Kubernetes においては再起動は Pod の削除と再作成を意味します。
+
+Deployment においては、再起動の仕方は Pod を削除するか、 rollout をさせるかの２つがメジャーな方法となります。
+
+#### 3.5.2.1 Pod を削除する
+
+これは Deployment や StatefulSet といった Pod の面倒をみてくれるリソース経由で Pod が維持されている場合に有効な手段で、もっとも原始的な方法になります。
+
+CLIより
+```
+oc delete pods -l=app=monolith
+oc get pods -w
+
+```
+簡単のためラベル指定で Pod を削除していますが、通常の運用では Pod 名を調べて直接指定するほうがよいでしょう。（Pod 名にランダム文字列がはいるためです）
+
+出力
+```
+bash-4.4$ oc delete  pods -l=app=monolith
+pod "monolith-6c6c9cd894-r6zr5" deleted
+bash-4.4$ oc get pods -w
+NAME                        READY   STATUS              RESTARTS   AGE
+monolith-6c6c9cd894-cbw4m   0/2     ContainerCreating   0          2s
+monolith-6c6c9cd894-cbw4m   0/2     ContainerCreating   0          3s
+monolith-6c6c9cd894-cbw4m   2/2     Running             0      
+```
+
+STATUS が ContainerCreating から Running に変化したら、CTRL ＋　C でコマンドを中断してください。
+
+削除されると、 Deployment が内部で利用している replication controler によって、 Pod 数を 1 に戻そうとする動きになり、結果として再起動となります。
+
+#### 3.5.2.２ ロールアウトさせる
+
+削除ではいかにも危険な雰囲気を感じる場合や、 Deployment strategy を Rolling にしてあり、もっと安全に再起動が行われてほしいときはこちらが有効です。
+
+CLIから
+```
+oc rollout restart deploy monolith
+oc get pods -w
+
+```
+
+Web Console には同じ操作をするメニューはありません。ただし、deployment とよく似た deploymentconfig であればメニューが存在します。
+
+![monolith11.png](./monolith11.png)
+
+実は deployment における rollout は比較的新しいコマンドになります。下記の Issue で長いあいだ議論されていました。 
+https://github.com/kubernetes/kubernetes/issues/13488
+
+一方、 OpenShift における deployment config においては、 OpenShift v3 の最初から rollout の実行は行うことができました。 細かいところですが、OpenShift と Kubernetes が近づいているところの１つです。
+
+## 4 Micro Service Archtecture への移行
+
+ここまでコンテナ化したモノリスアプリケーションを扱ってきました。ここからは Micro Service Architecture への移行を体験していきます。
+今回コンテナ環境にリフトしたモノリスアプリケーションは、すでに Front End と Back End が Pod 内部で別コンテナとして別れていました。わざわざサイドカーパターンを使うより、別 Pod にしたほうが合理的ではないかと考えた方もいるのではないかと思います。
 
 
 
