@@ -646,9 +646,118 @@ https://github.com/kubernetes/kubernetes/issues/13488
 ## 4 Micro Service Archtecture への移行
 
 ここまでコンテナ化したモノリスアプリケーションを扱ってきました。ここからは Micro Service Architecture への移行を体験していきます。
-今回コンテナ環境にリフトしたモノリスアプリケーションは、すでに Front End と Back End が Pod 内部で別コンテナとして別れていました。わざわざサイドカーパターンを使うより、別 Pod にしたほうが合理的ではないかと考えた方もいるのではないかと思います。
+今回コンテナ環境にリフトしたモノリスアプリケーションは、すでに Front End と Back End が Pod 内部で別コンテナとして別れていました。わざわざサイドカーパターンを使うより、別 Pod にしたほうが合理的ではないかと考えた方もいるのではないかと思います。Micro Service Architecture をデプロイする方法を知っておくことがキーポイントになります。
+
+*準備作業*
+
+CLIより
+```
+oc project $USER_NAME-msa
+git clone http://lab-gitea.lab-infra.svc:3000/$USER_NAME/msa-app.git
+cd msa-app
+```
+
+### 4.1 Frontend デプロイ
+
+まず、 Frontend をデプロイしていきます。
+
+CLより
+```
+oc new-app php:7.4-ubi8~http://lab-gitea.lab-infra.svc:3000/$USER_NAME/msa-app.git --context-dir='microservices/frontend/' --name='frontend'
+```
+
+結果
+```
+bash-4.4$ oc new-app php:7.4-ubi8~http://lab-gitea.lab-infra.svc:3000/$USER_NAME/msa-app.git --context-dir='microservices/frontend/' --name='frontend'
+--> Found image dc56c67 (6 weeks old) in image stream "openshift/php" under tag "7.4-ubi8" for "php:7.4-ubi8"
+
+    Apache 2.4 with PHP 7.4 
+    ----------------------- 
+    PHP 7.4 available as container is a base platform for building and running various PHP 7.4 applications and frameworks. PHP is an HTML-embedded scripting language. PHP attempts to make it easy for developers to write dynamically generated web pages. PHP also offers built-in database integration for several commercial and non-commercial database management systems, so writing a database-enabled webpage with PHP is fairly simple. The most common use of PHP coding is probably as a replacement for CGI scripts.
+
+    Tags: builder, php, php74, php-74
+
+    * A source build using source code from http://lab-gitea.lab-infra.svc:3000/user1/msa-app.git will be created
+      * The resulting image will be pushed to image stream tag "frontend:latest"
+      * Use 'oc start-build' to trigger a new build
+
+--> Creating resources ...
+    imagestream.image.openshift.io "frontend" created
+    buildconfig.build.openshift.io "frontend" created
+    deployment.apps "frontend" created
+    service "frontend" created
+--> Success
+    Build scheduled, use 'oc logs -f buildconfig/frontend' to track its progress.
+    Application is not exposed. You can expose services to the outside world by executing one or more of the commands below:
+     'oc expose service/frontend' 
+    Run 'oc status' to view your app.
+```
+
+oc new-app というコマンドを実施たところ複数の Resource が作成されました。
+
+- imagestream
+- buildconfig
+- deployment
+- service
 
 
+このコマンドは下記のうち、２〜６を一気にやってしまえる便利コマンドです。 oc new-app できるようにアプリケーションを用意する必要はありますが、アプリケーションの開発者にとっては非常に便利なコマンドです。
+
+1. アプリケーションを用意する
+1. Docker ファイルを準備する
+1. Docker Build を実行してアプリケーションイメージを作る
+1. アプリケーションイメージを、Kubernetes の利用するレジストリに登録( Push )する
+1. Manifest を用意する
+1. Manifest をKubernetesに適用する
+1. Kubernetes が Manifest に従ってアプリケーション Pod を起動する
+
+frontend は UI を担当するので Route をつくっておきましょう。
+
+CLより
+```
+oc expose service frontend
+```
+
+結果
+```
+bash-4.4$ oc expose service frontend
+route.route.openshift.io/frontend exposed
+```
+
+### 4.2 Payment Catalog デプロイ
+
+では次は Pyament サービスと Catalog サービスをデプロイしていきましょう。
+
+Catalog サービスのデプロイ
+```
+cd /projects/msa-app/microservices/catalog
+./mvnw clean package -Dquarkus.kubernetes.deploy=true
+```
+
+Payment サービスのデプロイ
+```
+cd /projects/msa-app/microservices/payment
+./mvnw clean package -Dquarkus.kubernetes.deploy=true
+```
+
+ビジュアルラベル付け
+```
+oc label deploy frontend app.openshift.io/runtime=php
+oc label deploy frontend app.kubernetes.io/part-of=microservice-app
+oc label dc  catalog app.kubernetes.io/part-of=microservice-app
+oc label dc  payment app.kubernetes.io/part-of=microservice-app
+```
+結果
+![msa1.png](./msa1.png)
+
+frontend にカーソルを乗せると矢印がでるので、ドラッグアンドドロップして、 catalog と payment につなげてみましょう。
+
+結果
+![msa2.png](./msa2.png)
+
+このようにマイクロサービス間の関係を可視化することができます。
+
+### 4.3 結果の確認
 
 
 
