@@ -757,7 +757,201 @@ frontend にカーソルを乗せると矢印がでるので、ドラッグア�
 
 このようにマイクロサービス間の関係を可視化することができます。
 
-### 4.3 結果の確認
+### Option 4.3 Cloud Native Runtime *Quarkus* とは
+
+モノリスアプリケーションのバックエンドは SpringBoot で作られていましたが、マイクロサービスのバックエンドは Quarkus というフレームワークで書き直しています。
+
+Quarkus は Java を Kubernetes でより効率よく動かすために Fat になりすぎた JakaｒtaEE（旧 JavaEE）の仕様を踏襲せずに、クラウドネイティブなアプリケーションに必要な機能のみで作り直したフレームワークです。起動が極めて早いこととフットプリントが小さいことと開発者向けの便利な機能がたくさんあることが特徴です。
+
+CLI より
+```
+oc logs deploymentconfig/payment
+```
+
+結果
+```
+[jboss@workspaceghtvo0pweder7x0a microservices]$ oc logs deploymentconfig/payment
+__  ____  __  _____   ___  __ ____  ______ 
+ --/ __ \/ / / / _ | / _ \/ //_/ / / / __/ 
+ -/ /_/ / /_/ / __ |/ , _/ ,< / /_/ /\ \   
+--\___\_\____/_/ |_/_/|_/_/|_|\____/___/   
+2022-03-11 02:53:14,863 INFO  [io.quarkus] (main) payment 1.0.0-SNAPSHOT on JVM (powered by Quarkus 1.11.7.Final) started in 0.969s. Listening on: http://0.0.0.0:8080
+2022-03-11 02:53:14,884 INFO  [io.quarkus] (main) Profile prod activated. 
+2022-03-11 02:53:14,885 INFO  [io.quarkus] (main) Installed features: [cdi, kubernetes, resteasy]
+2022-03-11 02:53:20,592 INFO  [com.exa.PaymentResource] (executor-thread-1) received: 350
+```
+
+Quarkus のアスキーアートのあとに *started in 0.969s* とでています。１秒かからずに起動が完了しています。
+
+メモリの使用量もみてみましょう。
+
+モノリスのメモリ使用率
+
+![msa3.png](./msa3.png)
+
+マイクロサービス(Payment)のメモリ使用率
+
+![msa4.png](./msa4.png)
+
+モノリスアプリケーションは apache + PHP と Java SpringBoot がサイドカーとしてデプロイされていました。対してマイクロサービスの Payment は Quarkus 単体ですが、これくらいの差があります。 
+
+Quarkus は OpenShift のサブスクリプションに含まれており、 Red Hat のサポートをうけることができます。
+コミュニティとしての Quarkus の上方は下記のガイドによくまとまっていて、特にマイクロサービス時代におけるユースケースが Developer 向けに紹介されて言いますので参考にしてください。
+
+https://ja.quarkus.io/guides/
+
+
+### 4.4 マイクロサービス内のDNS名解決のルール作り
+
+3.4.1 にて Kubernetes の Service のルールを確認しました。
+マイクロサービスにおいてはDNS名を解決する頻度がモノリスアプリケーションに比べて飛躍的に増えます。そのためアプリケーションの接続先のホスト名やIPアドレスなどをどうやって設定していくかはあらかじめルールを作っておくべきです。
+
+ルールを作る前に以下の特性を理解しておきましょう。
+
+- Pod の IP アドレスは Pod が再作成されるたびにかわる
+- Pod 内からは my-svc.my-namespace.svc.cluster.local （省略可能） のルールに従って、Service 名から IP アドレスが透過的に解決できる
+- Service がもつ Cluster-IP は固定されるが、 Service を作り直すと変わる
+- Service は Port を隠蔽しない
+- Service は 配下に複数 Pod がいる場合、L3 ロードバランシングのイメージで単純ラウンドロビンしか行わない
+
+![msa5.png](./msa5.png)
+
+例えば、本ハンズオンでサンプルとして使っている Frontend の PHP アプリケーションでは、下記のように直接 Kubernetes に依存した書き方をしています。 
+
+```
+		$total=calc_total($sel_items);
+#		echo $total;
+		$url = "http://payment:8080/payment?total=".$total;
+		
+		$client = curl_init($url);
+```
+
+```
+	$t1="";
+	$url = "http://Catalog:8080/getCatalog";
+	$client = curl_init($url);
+	curl_setopt($client,CURLOPT_RETURNTRANSFER,true);
+```
+
+「Service 名で抽象化できているのでこれでよいのではないか？」 と考えるのも１つの手ではありますが、マイクロサービスの範囲が広がってくるとこの埋め込みが技術的負債になりそうです。また、手元でテストのために動かす際に payment や catalog を PC のhosts ファイルに登録する手間もあります。
+
+DNSの名前解決ルールの策定方針としては、サービス名とポート名は外から与える形式を採るのが望ましいでしょう。
+
+### 4.5 ルールの中心に Infrastructer as Code
+
+マイクロサービスの管理において中心的な考え方になってくるのが Infrastructer as Code です。
+ここでは狭い範囲で Infrastructer as Code の考え方見ていきます。
+
+OpenShift や Kubernetes は使っているだけで Infrastructer as Code であると言える部分が多々あります。
+例えば、 payment service は以下のような Manifest で表現されます。 これまで手動管理してきた IP アドレス を Service 名で抽象化しながら、 Code として管理できます。
+```
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment
+spec:
+  selector:
+    app: payment
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+```
+
+サンプルアプリケーション側には Service 名が直接埋め込まれているので、これも Infrastructer as Code の考え方で整理しましょう。
+Kubernetes において アプリケーションの設定という Infrastructure を Code にしてくれるリソースは大きく３つ存在します。
+
+- ConfigMap
+- Deployment などにおける Env
+- Secret
+
+ConfigMap は キー/バリューで定義するパターンと、ファイルのように定義する二種類の方法があります。
+
+https://kubernetes.io/ja/docs/concepts/configuration/configmap/
+
+```
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-config
+data:
+  # キーバリューで定義する場合
+  catalog-service-host: "catalog:8080"
+  payment-service-host: "payment:8080"
+ 
+  # ファイル形式で定義する場合
+  config.php: |
+    <?php
+    return [
+        'catalog-service-host' => 'catalog:8080',
+        'payment-service-host' => 'payment:8080',
+    ];
+    ?>
+```
+
+ConfigMap は環境変数を通して Pod に伝える方法と、読み取り専用の擬似的なファイルとして Pod 内にマウントしてしまう方法があります。
+
+環境変数を使う方法いくつかパターンがありますが、よく使うのは以下の２つです。直接定義する場合と、ConfigMap の キー/バリュー を指定する方法です。
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+  labels:
+    app: payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment
+  template:
+    metadata:
+      labels:
+        app: payment
+    spec:
+      containers:
+      - name: payment-service
+        image: image-registry.openshift-image-registry.svc:5000/lab-user1/payment:latest
+        ports:
+         - containerPort: 8081
+           protocol: TCP
+        env:
+          # 直接定義する場合
+          - name: catalog-service-host
+            value: 'catalog:8080'
+          - name: payment-service-host
+            value: 'payment:8080'
+          # ConfigMap 経由で定義する場合
+          - name: catalog-service-host
+            valueFrom:
+              configMapKeyRef:
+                name: frontend-config
+                key: catalog-service-host
+          - name: payment-service-host
+            valueFrom:
+              configMapKeyRef:
+                name: frontend-config
+                key: payment-service-host
+```
+
+
+Secret は ConfigMap と似ていますが、ユーザーのロールによって中味を参照できるかできないかという差があります。ですが、OpenShift や Kubernetes の設定情報が書き込まれている etcd サービス上には、 BASE64 エンコードされておかれているだけのため、企業によっては要件に合わない可能性があります。  Secret については本ハンズオンでは紹介にとどめます。
+
+https://kubernetes.io/ja/docs/concepts/configuration/secret/
+
+環境変数に直接パラメーターを定義する方法と、 ConfigMap を使う方法は一長一短があります。すべてのパラメーターをConfigMap にいれておいて、複数 Deployment から参照している状態であれば、変更を一回で行える、という考え方ができますが、逆に言えば１つの変更が他に波及することになります。
+
+保守性を考えると、マイクロサービスの面倒をみる組織単位をこえた共通化は NG としておくの一つの指針になりそうです。
+また、マイクロサービスごとに必ず同じになるはずのパラメータ（例えば共通で利用する外部サービスのURLなど）と、局所性があるパラメータは別管理にしたほうがよいでしょう。
+
+Infrastructure　as Code を行うと、コードのメンテナンス性とインフラのメンテナンス性が同一になる、ということに注目してください。Dev と Ops が一緒になって、これまでのアプリケーション・インフラの保守双方のプラクティス元に議論するべきポイントです。小さいところから DevOps をはじめてみましょう。
+
+### 4.6 マイクロサービスに変更を加える
+
+
+
+
 
 
 
