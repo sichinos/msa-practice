@@ -1107,7 +1107,7 @@ https://ja.quarkus.io/version/1.11/guides/rest-data-panache
 
 しかし、そこを切り抜けたあとは Deploy 単位が小さくなったことを実感できるフェーズに入ることができました。特に OpenShift Kubernetes 上の基本的な Deployment Strategy である Rolling Strategy の威力を体験できたのではないでしょうか。
 
-OpenShift Kubernetes の機能で、マイクロサービスを「心地よく」開発・保守ができたのであれば、そこは理想的な切断ポイントになります。テクノロジーなしではマイクロサービスは語ることができません。
+OpenShift Kubernetes の機能で、マイクロサービスを「心地よく」開発・保守ができたのであれば、そこは理想的な切断ポイントになります。マイクロサービスはビジネスを加速させるためのプラクティスですが、テクノロジーなしではマイクロサービスを正しく操ることはできません。
 
 ![msa14.png](./msa14.png)
 
