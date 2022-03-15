@@ -653,7 +653,8 @@ https://github.com/kubernetes/kubernetes/issues/13488
 CLIより
 ```
 oc project $USER_NAME-msa
-git clone http://lab-gitea.lab-infra.svc:3000/$USER_NAME/msa-app.git
+git clone 
+git clone http://$USER_NAME:openshift@lab-gitea.lab-infra.svc:3000/$USER_NAME/msa-app.git
 cd msa-app
 ```
 
@@ -949,9 +950,166 @@ Infrastructure　as Code を行うと、コードのメンテナンス性とイ�
 
 ### 4.6 マイクロサービスに変更を加える
 
+次はマイクロサービスに変更を加えてみましょう。 サンプルアプリケーションのデプロイメントにはかっちりしたパイプラインはまだありませんが、OpenShift をつかってアプリケーションを構築しているので、ある程度の自動化とInfrastructure as Code が実践された状態になっています。
 
+まずは
 
+#### 4.6.1 Frontend の パラメーター外出し化
 
+まずは小規模な変更を行ってみましょう。動作はそのままで技術的負債を返済します。
+Frontend の直接アプリケーションに記述しているパラメーターを OpenShift からインジェクションするように変更します。
+
+##### 4.6.1.1 Deployment に環境変数を追加する
+
+Frontend の Deployment を変更していきますが、現在マイクロサービスは開発途中ということで Manifest をまだ管理していない状況です。
+ここでは Web Console から環境変数の編集を実施してみましょう。
+
+Web Console の Topology から以下のように Frontend の Deployment を編集する画面を開いていってください。
+
+![msa7.png](./msa7.png)
+
+画面をスクロールしていくと環境変数の編集画面があります。
+
+![msa8.png](./msa8.png)
+
+下記のように編集して、保存してください。
+
+|  名前  |  値  |
+| ---- | ---- |
+|  payment-service-host  |  payment:8080  |
+|  catalog-service-host  |  catalog:8080  |
+
+![msa9.png](./msa9.png)
+
+##### 4.6.1.2 アプリケーションの変更
+ではアプリケーションを変更します。
+
+CodeReadyWorkspaces の左下のペインから msa-app → microservices → frontend と開いていき、 index.php を開いてください。
+
+![msa6.png](./msa6.png)
+
+３２行目と４２行目が編集対象です。
+CodeReadyWorkspaces はデフォルトは AutoSave なので編集すれば自動的に保存されています。
+
+32行目 編集前
+```
+		$url = "http://payment:8080/payment?total=".$total;
+```
+
+42行目 編集前
+
+```
+	$url = "http://Catalog:8080/getCatalog";
+```
+
+それぞれを下記のように変更してください。
+
+32行目 編集後
+```
+		$url = "http://" . getenv("payment-service-host"). "/payment?total=" . $total;
+```
+
+42行目 編集後
+
+```
+	$url = "http://" . getenv("catalog-service-host") .  "/getCatalog";
+```
+
+変更をリポジトリに反映しましょう。
+
+CLIより
+```
+cd /projects/msa-app/
+git add microservices/frontend/index.php
+git commit -m "Service パラメーターを外出し"
+git push
+```
+
+結果
+```
+bash-4.4$ cd /projects/msa-app/
+bash-4.4$ git add microservices/frontend/index.php
+bash-4.4$ git commit -m "Service パラメーターを外出し"
+[master f94a064] Service パラメーターを外出し
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+bash-4.4$ git push
+Enumerating objects: 9, done.
+Counting objects: 100% (9/9), done.
+Delta compression using up to 4 threads
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 582 bytes | 582.00 KiB/s, done.
+Total 5 (delta 3), reused 0 (delta 0), pack-reused 0
+remote: . Processing 1 references
+remote: Processed 1 references in total
+To http://lab-gitea.lab-infra.svc:3000/user1/msa-app.git
+   06443cf..f94a064  master -> master
+```
+
+アプリケーションのビルドを実行します。
+
+CLIより
+```
+oc start-build frontend
+```
+
+すぐに Web Console を開いて Frontend の Deployment の様子をみてみましょう。
+
+まずはビルドが進行しているマークがでます。（ここをクリックするとビルドのログを見ることもできます）
+
+![msa10.png](./msa10.png)
+
+次にアプリケーションが Rolling Strategy で Deploy される様子が見えます。
+
+![msa11.png](./msa11.png)
+
+#### Option 4.6.3 Catalog の変更
+
+進行が速い方は Catalog も編集してみましょう。少し階層が深いですが、 CatalogResource.java までたどってください。
+
+![msa12.png](./msa12.png)
+
+14行目が UI に表示されている在庫と価格を返却している部分です。
+
+変更前
+```
+        return "Pizza,Ola,Movie:200,150,200";
+```
+
+好きなように変更してみましょう。例えば以下のように変更してみます。
+
+変更後
+```
+        return "Pizza,Ola,Movie,Orage:200,150,200,100";
+```
+
+ではデプロイしましょう。 Quarkus アプリケーションが Deploy　済みの場合は、ビルドだけを行う下記のコマンドがよいでしょう。
+
+CLIより
+```
+cd /projects/msa-app/microservices/catalog
+./mvnw clean package -Dquarkus.container-image.build=true
+```
+
+Frontend をブラウザで開いて結果が反映されているか確認してみてください。
+
+![msa13.png](./msa13.png)
+
+Payment も Quarkus アプリケーションなので同じような手順で変更をすることができます。
+
+更にアプリケーションを発展させたい場合は Quarkus ガイドが参考になります。まずはデータベースアクセスを追加してみるのはどうでしょうか。最初の一歩として「シンプルな REST CRUDサービスの書き方」がおすすめです。（ガイドのバージョン番号の指定をお忘れなく！）
+
+https://ja.quarkus.io/version/1.11/guides/rest-data-panache
+
+###4.7 MSA まとめ
+
+ここまで、サンプルアプリケーションのモノリスアプリケーションを、マイクロサービスに分割、 Deploy 変更する方法を体験してきました。
+マイクロサービスのほうが考えることが多くなる、というのは間違いなく存在します。今回で言えば Service 名をパラメーターとして外出しする必要がありました。
+
+しかし、そこを切り抜けたあとは Deploy 単位が小さくなったことを実感できるフェーズに入ることができました。特に OpenShift Kubernetes 上の基本的な Deployment Strategy である Rolling Strategy の威力を体験できたのではないでしょうか。
+
+OpenShift Kubernetes の機能で、マイクロサービスを「心地よく」開発・保守ができたのであれば、そこは理想的な切断ポイントになります。テクノロジーなしではマイクロサービスは語ることができません。
+
+![msa14.png](./msa14.png)
 
 
 
