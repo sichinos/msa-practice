@@ -1100,17 +1100,53 @@ Payment も Quarkus アプリケーションなので同じような手順で変
 
 https://ja.quarkus.io/version/1.11/guides/rest-data-panache
 
-###4.7 MSA まとめ
+#### Option 4.6.４ Catalog に ヘルスチェック を追加
 
-ここまで、サンプルアプリケーションのモノリスアプリケーションを、マイクロサービスに分割、 Deploy 変更する方法を体験してきました。
-マイクロサービスのほうが考えることが多くなる、というのは間違いなく存在します。今回で言えば Service 名をパラメーターとして外出しする必要がありました。
+OpenShift Kubernetes 上でマイクロサービスを動かして開発を加速していく際には、個々のサービスに対する Observability を確保しておくことが推奨されます。
+最も初歩的な Observability の確保の仕方として、 Readiness Probe と Livness Probe にアプリケーションを対応させる方法があります。
 
-しかし、そこを切り抜けたあとは Deploy 単位が小さくなったことを実感できるフェーズに入ることができました。特に OpenShift Kubernetes 上の基本的な Deployment Strategy である Rolling Strategy の威力を体験できたのではないでしょうか。
+クラウドネイティブランタイムである Quarkus は、自動で Probe 用のエンドポイントを作成することができます。
+詳しくは下記のガイドを参考にしてください。
+
+https://ja.quarkus.io/version/1.11/guides/microprofile-health
+
+CLIより
+```
+cd /projects/msa-app/microservices/catalog
+./mvnw quarkus:add-extension -Dextensions="smallrye-health"
+./mvnw clean package -Dquarkus.kubernetes.deploy=true
+```
+
+実施前の Deployment は、このような警告がでていましたが、 Deploy が完了すると警告は消えます。
+
+![msa15.png](./msa15.png)
+
+どのように設定されたのか見てみましょう。 catalog の Deployment Config のアクションメニューから、ヘルスチェックの編集を選択してください。
+
+![msa16.png](./msa16.png)
+
+緑字で「追加済みの Rediness プローブ」 というところをクリックすると、このように設定されていることが確認できます。
+
+![msa17.png](./msa17.png)
+
+### 4.7 MSA まとめ
+
+ここまで、サンプルアプリケーションのモノリスアプリケーションをマイクロサービスに分割、・Deploy 変更する方法を体験してきました。
+マイクロサービスのほうが考えることが多くなる、とい事実は間違いなく存在します。今回のハンズオンで言えば Service 名をパラメーターとして外出しする必要がありました。
+
+しかし、そこを切り抜けたあとは Deploy 単位が小さくなったことを実感できるフェーズに入ることができたのではないでしょうか。特に OpenShift Kubernetes 上の基本的な Deployment Strategy である Rolling Strategy の威力を体験できたかと思います。
 
 OpenShift Kubernetes の機能で、マイクロサービスを「心地よく」開発・保守ができたのであれば、そこは理想的な切断ポイントになります。マイクロサービスはビジネスを加速させるためのプラクティスですが、テクノロジーなしではマイクロサービスを正しく操ることはできません。
 
 ![msa14.png](./msa14.png)
 
+# 今後について
 
+あるビジネスを実現するアプリケーションにおいて、モノリスがよいか、マイクロサービスがよいか、という議論があったとして、マイクロサービスがよいだろう、となったときに大きく２つのケイパビリティが必要になります。
+
+- ビジネスをマイクロサービスに分解・設計するケイパビリティ
+- マイクロサービスを構築して継続開発していくケイパビリティ
+
+本ハンズオンは後者の入門編といった位置づけでした。
 
 
