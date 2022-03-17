@@ -1,0 +1,30 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: lab-operator-group
+  namespace: lab-infra
+spec:
+  targetNamespaces:
+  - lab-infra
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: rhsso-operator
+  namespace: lab-infra
+spec:
+  channel: stable
+  name: rhsso-operator
+  source: redhat-operators 
+  sourceNamespace: openshift-marketplace 
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: gitea-operator
+  namespace: openshift-operators
+spec:
+  channel: stable
+  name: gitea-operator
+  source: redhat-gpte-gitea
+  sourceNamespace: openshift-marketplace

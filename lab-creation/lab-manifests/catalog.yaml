@@ -1,0 +1,10 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: sonatype
+  namespace: openshift-marketplace
+spec:
+  sourceType: grpc
+  image: registry.connect.redhat.com/sonatype/nxrm-operator-certified:latest
+  displayName: Sonatype Nexus
+  publisher: Red Hat Japan

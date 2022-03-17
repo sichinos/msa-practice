@@ -1,0 +1,21 @@
+apiVersion: gpte.opentlc.com/v1
+kind: Gitea
+metadata:
+  name: lab-gitea
+spec:
+  giteaImageTag: 1.15.10
+  giteaVolumeSize: 4Gi
+  giteaSsl: true
+  postgresqlVolumeSize: 4Gi
+  giteaAdminUser: lab-admin
+  giteaAdminPassword: "openshift"
+  giteaAdminEmail: lab-admin@example.com
+  giteaCreateUsers: true
+  giteaGenerateUserFormat: "user%d"
+  giteaUserNumber: 30
+  giteaUserPassword: openshift
+  giteaMigrateRepositories: true
+  giteaRepositoriesList:
+    - repo: https://gitlab.com/openshift-starter-kit/msa-app.git
+      name: MSA-app
+      private: false

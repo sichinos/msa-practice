@@ -1,0 +1,445 @@
+apiVersion: keycloak.org/v1alpha1
+kind: Keycloak
+metadata:
+  name: sso
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  externalAccess:
+    enabled: true
+  instances: 1
+---
+kind: KeycloakRealm
+apiVersion: keycloak.org/v1alpha1
+metadata:
+  name: openshift-realm
+  namespace: lab-infra
+  labels:
+    realm: openshift
+spec:
+  realm:
+    id: openshift
+    realm: openshift
+    enabled: true
+    displayName: OpenShift Realm
+    rememberMe: true
+  instanceSelector:
+    matchLabels:
+      app: sso
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: openshift-client
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  client:
+    clientId: openshift
+    secret: openshift-client-secret
+    clientAuthenticatorType: client-secret
+    enabled: true
+    directAccessGrantsEnabled: true
+    redirectUris:
+      - '*'
+    standardFlowEnabled: true
+    defaultClientScopes:
+      - email
+      - profile
+    fullScopeAllowed: true
+  realmSelector:
+    matchLabels:
+      realm: openshift
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: lab-admin
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: lab-admin
+    firstName: lab-admmin
+    lastName: StarterKit
+    email: lab-admin@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user1
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user1
+    firstName: user1
+    lastName: StarterKit
+    email: user1@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user2
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user2
+    firstName: user2
+    lastName: StarterKit
+    email: user2@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user3
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user3
+    firstName: user3
+    lastName: StarterKit
+    email: user3@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user4
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user4
+    firstName: user4
+    lastName: StarterKit
+    email: user4@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user5
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user5
+    firstName: user5
+    lastName: StarterKit
+    email: user5@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user6
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user6
+    firstName: StarterKit
+    lastName: MSA
+    email: user6@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user7
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user7
+    firstName: user7
+    lastName: StarterKit
+    email: user7@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user8
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user8
+    firstName: user8
+    lastName: StarterKit
+    email: user8@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user9
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user9
+    firstName: user9
+    lastName: StarterKit
+    email: user9@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user10
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user10
+    firstName: user10
+    lastName: StarterKit
+    email: user10@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user11
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user11
+    firstName: user11
+    lastName: StarterKit
+    email: user11@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user12
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user12
+    firstName: user12
+    lastName: StarterKit
+    email: user12@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user13
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user13
+    firstName: user13
+    lastName: StarterKit
+    email: user13@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user14
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user14
+    firstName: user14
+    lastName: StarterKit
+    email: user14@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user15
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user15
+    firstName: user15
+    lastName: StarterKit
+    email: user15@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
+---
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakUser
+metadata:
+  name: user16
+  labels:
+    app: sso
+  namespace: lab-infra
+spec:
+  realmSelector:
+    matchLabels:
+      realm: openshift
+  user:
+    username: user16
+    firstName: user16
+    lastName: StarterKit
+    email: user16@example.com
+    enabled: true
+    emailVerified: true
+    credentials:
+      - type: "password"
+        value: "openshift"
+        temporary: false
