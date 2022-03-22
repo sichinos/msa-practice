@@ -1132,7 +1132,8 @@ cd /projects/msa-app/microservices/catalog
 ./mvnw clean package -Dquarkus.kubernetes.deploy=true
 ```
 
-実施前の Deployment は、このような警告がでていましたが、 Deploy が完了すると警告は消えます。
+この Extension が追加されている状態で deploy を行い直すことで、 OpenShift 側の設定も変わります。
+実施前の Deployment は、このような警告がでていましたが、 Deploy が完了すると警告は消えます。つまり Deployment に対して Probe の設定が行われたということです。
 
 ![msa15.png](./msa15.png)
 
@@ -1144,16 +1145,235 @@ cd /projects/msa-app/microservices/catalog
 
 ![msa17.png](./msa17.png)
 
-## ５. まとめ
+### ４．７. Kubernetes にスケーラブルなアプリケーションを配置することで得られるもの
+
+ここからはスケーラビリティのあるアプリケーションがコンテナ基盤上でどのような威力をもつのか体感していきましょう。
+
+#### 4.7.1 スケールアウト実行
+
+まずは作成したマイクロサービス１つずつをスケールアウトさせます。
+
+CLIより
+```
+oc scale deploy frontend --replicas=2
+oc scale deploymentconfig catalog --replicas=2
+oc scale deploymentconfig payment --replicas=2
+oc get pods|grep Running
+```
+
+Web Console より
+
+![resilience1.png](./resilience1.png)
+
+数を直接入れたい場合
+
+![resilience2.png](./resilience2.png)
+
+![resilience3.png](./resilience3.png)
+
+結果
+```
+bash-4.4$ oc scale deploy frontend --replicas=2
+deployment.apps/frontend scaled
+bash-4.4$ oc scale deploymentconfig catalog --replicas=2
+W0317 07:10:34.243383    1359 warnings.go:70] extensions/v1beta1 Scale is deprecated in v1.2+, unavailable in v1.16+
+deploymentconfig.apps.openshift.io/catalog scaled
+bash-4.4$ oc scale deploymentconfig payment --replicas=2
+W0317 07:10:34.355419    1367 warnings.go:70] extensions/v1beta1 Scale is deprecated in v1.2+, unavailable in v1.16+
+deploymentconfig.apps.openshift.io/payment scaled
+bash-4.4$ oc get pods|grep Running
+catalog-8-hftck             1/1     Running     0          19h
+catalog-8-mknxm             1/1     Running     0          10m
+frontend-7d4ff9f8fc-gbq8t   1/1     Running     0          2m8s
+frontend-7d4ff9f8fc-kdfmb   1/1     Running     0          19h
+payment-1-g9kxv             1/1     Running     0          10m
+payment-1-lkq2f             1/1     Running     0          19h
+```
+
+#### 4.7.2 MSA レジリエンス体験 （連続アクセス ＆ アプリケーションを止める）
+
+まずは、アプリケーションに連続したアクセスをかけましょう。１秒に一回 Frontend の画面を要求します。
+
+CLIより
+```
+APP_URL=http://`oc get route frontend -o jsonpath='{.spec.host}'`
+for i in {0..1000}
+do
+    curl -I $APP_URL
+    sleep 1;
+done
+```
+
+アクセスを止める場合は、CTRL + C を押してください。
+
+次はアプリケーションを断続的に停止します。Web Console の Administrator パースペクティブで Pod の一覧画面を開きます。
+
+![resilience4.png](./resilience4.png)
+
+![resilience5.png](./resilience5.png)
+
+Pod に Running のフィルターをかけます。
+
+![resilience6.png](./resilience6.png)
+
+Web Console と CLI でのアクセス実行状況が同時に見えるようにこのようにウィンドウを配置してください。（２画面以上あるかたはそれぞれ別画面で開いても OK です）
+
+![resilience7.png](./resilience7.png)
+
+Web Console から適当に Pod を選んで削除してみましょう。
+
+![resilience8.png](./resilience8.png)
+
+CLI にでるログに注目してください。概ね１秒毎にアクセスをしているので、 Date のところが１秒ずつ進んでいるはずです。
+
+![resilience9.png](./resilience9.png)
+
+Pod を何度も削除してみてください。そのたびにアプリケーションが起動してきて、このログが流れることを止めるが非常に難しいことが実感できるかと思います。
+
+*勝手に壊れた機械を人間が手動で直す* という経験はこれまで何度もあったと思いますが、 *人間が壊した機械を機械が勝手に直す* 体験ははじめてではないでしょうか。これが Kubernetes を利用する際に、最初に得るべきメリットです。 
+
+#### 4.7.3 Option MSA 無停止アプリケーションリリース
+
+進行が早いは、連続アクセスを実行したまま 4.6 のような手順でアプリケーションを変更してみてください。 
+
+#### 4.7.4 MSA トラブル体験
+
+Kubernetes OpenShift の基本的なメリットは先程体感することができました。止めようとしてもなかなか止まらないことが体験できました。
+次はアプリケーションが個別に完全に止まってしまった場合にどういったことがおこるかを体験します。
+
+まずは、 Frontend を止めてみましょう。
+
+CLIより
+```
+oc scale deployment 　frontend --replicas=0
+oc scale deploymentconfig catalog --replicas=2
+oc scale deploymentconfig payment --replicas=2
+```
+
+CLIより
+```
+APP_URL=http://`oc get route frontend -o jsonpath='{.spec.host}'`
+for i in {0..1000}
+do
+    curl -I $APP_URL
+    sleep 1;
+done
+```
+
+このように HTTP 503 が連続的に返却されてくるはずです。
+止める場合は CTRL + C を押してください。
+
+結果
+![resilience10.png](./resilience10.png)
+
+Frontend をブラウザで開くと、このような画面が出ています。
+
+![resilience11.png](./resilience11.png)
+
+これは OpenShift Router が Frontend の Redady な Pod を探したものの、１つもないのでエラーで応答してくれているのでこのようにすぐにエラーが返却されています。
+
+では、次は Catalog が止まっている状態ではどうでしょうか。
+
+CLIより
+```
+oc scale deployment 　frontend --replicas=2
+oc scale deploymentconfig catalog --replicas=0
+oc scale deploymentconfig payment --replicas=2
+```
+
+CLIより
+```
+APP_URL=http://`oc get route frontend -o jsonpath='{.spec.host}'`
+for i in {0..1000}
+do
+    curl -I $APP_URL
+    sleep 1;
+done
+```
+
+結果
+![resilience12.png](./resilience12.png)
+
+エラーがすぐに返却されずに、504 Gateway Time-out が発生します。（しばらく 200 OK が交じるのはキャッシュの影響だとおもわれます）
+
+次は Payment が止まっている状況を見てみましょう。
+
+CLIより
+```
+oc scale deployment 　frontend --replicas=2
+oc scale deploymentconfig catalog --replicas=2
+oc scale deploymentconfig payment --replicas=0
+```
+
+CLIより
+```
+APP_URL=http://`oc get route frontend -o jsonpath='{.spec.host}'`
+for i in {0..1000}
+do
+    curl -I $APP_URL
+    sleep 1;
+done
+```
+
+Frontend を呼び出す段階では Payment にアクセスしないので Payment が停止していても UI は問題なく表示されるようです。
+では、チェックアウト相当の処理をしたらどうなるでしょうか。
+
+CLIより
+```
+APP_URL=http://`oc get route frontend -o jsonpath='{.spec.host}'`
+for i in {0..1000}
+do
+    curl -X POST $APP_URL -d 'item%5B%5D=150&item%5B%5D=200&buy=Buy'
+    sleep 1;
+done
+```
+
+結果
+![resilience13.png](./resilience13.png)
+
+Catalog を止めたときと同じように Gateway Timeout が発生しました。
+
+最後にシステムを復旧しておきましょう。
+
+CLIより
+```
+oc scale deployment 　frontend --replicas=2
+oc scale deploymentconfig catalog --replicas=2
+oc scale deploymentconfig payment --replicas=2
+```
+
+#### 4.7.5 MSA トラブルまとめ
+
+ここまで実施してきたトラブルを表にまとめてみました。
+
+|                  | Frontend | Catalog | Payment | E2Eの状態                                                                     | 
+| ---------------- | -------- | ------- | ------- | ----------------------------------------------------------------------------- | 
+| Frontend が停止  | NG       | OK      | OK      | Frontendへのアクセスは即時エラーが返却される                                  | 
+| Catalogが停止    | OK       | NG      | OK      | FrontendへのアクセスはGateway Timeout を起こす                                | 
+| Paymentが停止    | OK       | OK      | NG      | Frontend の画面は表示できるが、チェックアウトを行うとGateway Timeout を起こす | 
+| XXXXとXXXXが停止 | ~        | ~       | ~       | ~                                                                             | 
+
+MSA における異常時の挙動は、にみなさんのご想像どおりだったでしょうか？ おそらく Gateway TImeout が最も望ましくない挙動っだったのではないかと思います。
+この体験では単一サービスの障害だけをシミュレートしましたが、フィールドに置いてはすべての組み合わせのテストを要求されることもあるでしょう。その場合にマイクロサービスが過剰に分割されていると、テストの組合せが爆発がおきることが容易に想像できます。
+
+#### 4.7.6 Service Mesh
+
+マイクロサービスのトラブルが発生するといったいどういうことがおきるのか、ということをすべて洗い出すのはなかなかに困難なミッションとなります。個別言語のライブラリや、 OS に属している TCP/IP ライブラリによっても少しずつ挙動が異なります。
+これらをまるっとどうにかしてしまおうというのが、 Servie Mesh という考え方です。Envoy Proxy をサイドカーとして Pod の中に埋め込み、 iptables を駆使して通信を横取りすることでマイクロサービスにおける通信をオーケストレーションしてしまおうというものです。
+
+![resilience14.png](./resilience14.png)
+
+「Service Mesh をいつ導入するべきか」、という問いに明確な答えはありません。
+導入の議論をしはじめる目安は、マイクロサービスを扱うビジネス・エンジニアのグループの単位が複数になるタイミングです。
+
+## 5. まとめ
 
 ここまで、サンプルアプリケーションのモノリスアプリケーションをマイクロサービスに分割、・Deploy 変更する方法を体験してきました。
-本ハンズオンでは１人のユーザーが、アプリケーションすべての変更を担っていたため、マイクロサービスに分割したメリットはあまり感じられなかったかもしれません。
+また、 Deploy したマイクロサービスがどういったレジリエンスを持つのか、持たないのかについても体験しました。
 
-体験を通して、マイクロサービスは一定以上の規模・複雑さがない状態で採用しても逆に重荷になりそうなことが体験できたのではないでしょうか。
+ここから先は、「どの単位にマイクロサービスによいのか」、の深堀りが必要になってくるでしょう。顧客側の体験と開発者側の体験、双方が重要になってきます。
 
 ![msa18.png](./msa18.png)
-
-しかしながら、OpenShift Kubernetes の機能で、分割したマイクロサービスを「心地よく」開発・保守ができたのであれば、そこは理想的なマイクロサービスの切断ポイントになります。特にアプリケーションの Deploy に関して、 OpenShift Kubernetes は非常に強みを持っています。
 
 マイクロサービスはビジネスを加速させるためのプラクティスですが、テクノロジーなしではマイクロサービスを正しく操ることはできません。サービスの最適な粒度を見つけるためには不断の努力を要しますが、苦労して分割・サイズダウンしたマイクロサービスが。再びモノリス化してしまわないように、コンテナプラットフォームの機能を活かしながらサービスの複雑さをコントロールしていってください。
 
