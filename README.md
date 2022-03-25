@@ -1245,7 +1245,7 @@ Kubernetes OpenShift の基本的なメリットは先程体感することが�
 
 CLIより
 ```
-oc scale deployment 　frontend --replicas=0
+oc scale deployment frontend --replicas=0
 oc scale deploymentconfig catalog --replicas=2
 oc scale deploymentconfig payment --replicas=2
 ```
@@ -1276,7 +1276,7 @@ Frontend をブラウザで開くと、このような画面が出ています�
 
 CLIより
 ```
-oc scale deployment 　frontend --replicas=2
+oc scale deployment frontend --replicas=2
 oc scale deploymentconfig catalog --replicas=0
 oc scale deploymentconfig payment --replicas=2
 ```
@@ -1300,7 +1300,7 @@ done
 
 CLIより
 ```
-oc scale deployment 　frontend --replicas=2
+oc scale deployment frontend --replicas=2
 oc scale deploymentconfig catalog --replicas=2
 oc scale deploymentconfig payment --replicas=0
 ```
