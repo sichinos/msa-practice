@@ -747,13 +747,13 @@ route.route.openshift.io/frontend exposed
 Catalog サービスのデプロイ
 ```
 cd /projects/msa-app/microservices/catalog
-./mvnw clean package -Dquarkus.kubernetes.deploy=true
+./mvnw clean package -Dquarkus.kubernetes.deploy=true -Dquarkus.kubernetes-client.trust-certs=true
 ```
 
 Payment サービスのデプロイ
 ```
 cd /projects/msa-app/microservices/payment
-./mvnw clean package -Dquarkus.kubernetes.deploy=true
+./mvnw clean package -Dquarkus.kubernetes.deploy=true -Dquarkus.kubernetes-client.trust-certs=true
 ```
 
 ビジュアルラベル付け
@@ -1102,7 +1102,7 @@ oc start-build frontend
 CLIより
 ```
 cd /projects/msa-app/microservices/catalog
-./mvnw clean package -Dquarkus.container-image.build=true
+./mvnw clean package -Dquarkus.container-image.build=true -Dquarkus.kubernetes-client.trust-certs=true
 ```
 
 Frontend をブラウザで開いて結果が反映されているか確認してみてください。
