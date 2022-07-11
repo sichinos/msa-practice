@@ -1129,7 +1129,7 @@ CLIより
 ```
 cd /projects/msa-app/microservices/catalog
 ./mvnw quarkus:add-extension -Dextensions="smallrye-health"
-./mvnw clean package -Dquarkus.kubernetes.deploy=true
+./mvnw clean package -Dquarkus.kubernetes.deploy=true -Dquarkus.kubernetes-client.trust-certs=true
 ```
 
 この Extension が追加されている状態で deploy を行い直すことで、 OpenShift 側の設定も変わります。
