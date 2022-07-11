@@ -171,7 +171,7 @@ jboss         95  0.0  0.0  51868  3660 pts/0    R+   00:49   0:00 ps aux
 
 実行コマンド
 ```
-cat  cat ~/.kube/config 
+cat ~/.kube/config 
 ```
 
 結果
