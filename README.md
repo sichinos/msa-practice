@@ -3,85 +3,100 @@
 Container Stater Kit で実施するハンズオンの手順を紹介します。  
 当ハンズオンによって、簡単なモノリスアプリケーションのマイクロサービスへの分割を体験することができます。
 
+---
+## Table of Contents
+- [1. 管理者向け環境準備](#1-管理者向け環境準備)
+  - [1.1. OpenShiftへのWeb Console ログイン](#11-openshiftへのweb-console-ログイン)
+  - [1.2. CodeReadyWorkspaces ログイン](#12-codereadyworkspaces-ログイン)
+  - [1.3. OpenShiftへのCLI ログイン](#13-openshiftへのcli-ログイン)
+  - [1.3.1. 環境変数保存](#131-環境変数保存)
+  - [1.3.2.プロジェクト作成](#132プロジェクト作成)
+  - [Option 1.4. 寄り道](#option-14-寄り道)
+- [2. モノリスアプリケーションのデプロイ](#2-モノリスアプリケーションのデプロイ)
+- [2.1. デプロイに必要なリソースを準備する](#21-デプロイに必要なリソースを準備する)
+- [2.2. Manifestの準備](#22-manifestの準備)
+- [2.3. モノリスアプリケーションのデプロイ実施](#23-モノリスアプリケーションのデプロイ実施)
+- [2.4. モノリスアプリケーションへのアクセス](#24-モノリスアプリケーションへのアクセス)
+  - [2.4.1. Service の動作確認](#241-service-の動作確認)
+  - [2.4.2. Route の追加と動作確認](#242-route-の追加と動作確認)
+    - [OpenShift Router とは](#openshift-router-とは)
+- [2.5. 基本的な運用方法](#25-基本的な運用方法)
+  - [2.5.1. アプリケーションのログの見方](#251-アプリケーションのログの見方)
+  - [2.5.2. アプリケーションの再起動の仕方](#252-アプリケーションの再起動の仕方)
+- [3. Micro Service Archtecture への移行](#3-micro-service-archtecture-への移行)
+  - [3.1. Frontend デプロイ](#31-frontend-デプロイ)
+  - [3.2. Payment Catalog デプロイ](#32-payment-catalog-デプロイ)
+  - [3.3. Cloud Native Runtime *Quarkus* とは (Optional)](#33-cloud-native-runtime-quarkus-とは-optional)
+  - [3.4. マイクロサービス内のDNS名解決のルール作り](#34-マイクロサービス内のdns名解決のルール作り)
+  - [3.5. ルールの中心に Infrastructer as Code](#35-ルールの中心に-infrastructer-as-code)
+  - [3.6. マイクロサービスに変更を加える](#36-マイクロサービスに変更を加える)
+    - [3.6.1 Frontend の パラメーター外出し化](#361-frontend-の-パラメーター外出し化)
+    - [3.6.2. Catalog の変更 (Optional)](#362-catalog-の変更-optional)
+    - [3.6.3. Catalog に ヘルスチェック を追加 (Optional)](#363-catalog-に-ヘルスチェック-を追加-optional)
+  - [3.7. Kubernetes にスケーラブルなアプリケーションを配置することで得られるもの](#37-kubernetes-にスケーラブルなアプリケーションを配置することで得られるもの)
+    - [3.7.1. スケールアウト実行](#371-スケールアウト実行)
+    - [3.7.2. MSA レジリエンス体験 （連続アクセス ＆ アプリケーションを止める）](#372-msa-レジリエンス体験-連続アクセス--アプリケーションを止める)
+    - [3.7.3. MSA 無停止アプリケーションリリース (Optional)](#373-msa-無停止アプリケーションリリース-optional)
+    - [3.7.4. MSA トラブル体験](#374-msa-トラブル体験)
+    - [3.7.5. MSA トラブルまとめ](#375-msa-トラブルまとめ)
+    - [3.7.6. Service Mesh](#376-service-mesh)
+- [4. まとめ](#4-まとめ)
 
-## 1. 【管理者向け】 環境準備
+---
+## 1. 管理者向け環境準備
 
-## 2. OpenShiftへのログイン
-
-### 2-1. OpenShiftへのWeb Console ログイン
-
+### 1.1. OpenShiftへのWeb Console ログイン
 OpenShiftのWeb Consoleにログインしましょう。URLとユーザー/パスワードは管理者から割り当てられたものを使用してください。
-
 ![webconsole-login-1.png](./images/webconsole-login-1.png)
-
 ![webconsole-login-2.png](./images/webconsole-login-2.png)
-
 ![webconsole-login-3.png](./images/webconsole-login-3.png)
 
 Developer パースペクティブへようこそというダイアログが出ればログインは成功です。ツアーはスキップしてください。
 
-### 2-2. CodeReadyWorkspaces ログイン
-
+### 1.2. CodeReadyWorkspaces ログイン
 今回のハンズオンは、簡単なモノリスを分解してJavaを利用したマイクロサービスをビルド・デプロイという体験を含んでいます。お手元にJavaの環境がなかったり、コーディングの経験がなく
 てもスムーズに進められるようにCodeReadyWorspacesというWebIDEを利用します。
 
 Web Consoleの右上のアプリケーションボタンを押して、CodeReadyWorspacesを選択してください。
-
 ![crw1.png](./images/crw1.png)
 
 再度Web Consoleのログイン画面と同じ認証画面が表示されるので、同じ用にログイン方法を選んで、ユーザー/パスワードを入力してください。
-
 下記の画面は Allow selected permissions のボタンを押してください。
-
 ![crw2.png](./images/crw2.png)
 
 さきほどのボタン押下でアカウント情報がOpenShiftのoAuthから連携されました。Eメールアドレスが不足しているので、下記の画面が表示されます。
 割り当てあられたユーザー名@example.com と入力してSubmitをおしてください。
-
 例: user1@example.com
-
 ![crd3.png](./images/crd3.png)
 
 ログインが成功するとSampleワークスペースが並んだダッシュボードが表示されます。CodeReadyWorkspacesは、開発を行いたい言語に必要なツールスタックをひとまとめにし、WebIDEとしてデプロイすることができます。
-
 本ハンズオンでは、モノリスをマイクロサービスに分割する際に Quarkus というJavaフレームワークを利用します。少しスクロールして Quarkus をクリックしてください。
-
 ![crd4.png](./images/crd4.png)
 
 ワークスペースのスタートに少し時間がかかります。
-
 ![crd5.png](./images/crd5.png)
 
 起動が完了すると、このようにVSCodeライクなIDEが起動します。
-
 ![crd6.png](./images/crd6.png)
 
 Terminalを起動するために画面右側のキューブのマークをクリックしてから >_ New Terminal をクリックしてください。
-
 ![crd7.png](./images/crd7.png)
 
 このようにTerminalが起動します。ハンズオン前半はWebIDEとしての機能はつかわず、Terminalとしての利用が主となるので、境界を上方にドラッグして領域を広げてもよいでしょう。
-
 ![crd8.png](./images/crd8.png)
 
 このTerminalはOpenShift上のLinuxコンテナにリモートシェルで接続しているようなものと考えてください。そのためコマンドはRed Hat Enterprise Linux基準になります。
 起動しているShellはBashなのでコマンドのタブ補完が可能です。
-
-
 すべてチェックがついたら次に進んでください
 
-### 2-3.OpenShiftへのCLI ログイン
-
+### 1.3. OpenShiftへのCLI ログイン
 OpenShift Web Consoleの画面の右上のユーザー名の部分をクリックして、ログインコマンドのコピーを選択してください。これまで通りログインメソッドは lab-login を選択してください。
-
 ![cli-login1.png](./images/cli-login1.png)
 
 Display Token という文字が表示されるのでクリックしてください。
-
 ![cli-login2.png](./images/cli-login2.png)
 
 Loginコマンドが表示されるので oc から始まる文字列をコピーしてください。
-
 ![cli-login3.png](./images/cli-login3.png)
 
 CodeReadyWorkspacesのTerminalに戻って、コピーしてログインコマンドをはりつけてエンターキーを押してください。
@@ -98,8 +113,7 @@ Using project "user1-codeready".
 Welcome! See 'oc help' to get started.
 ```
 
-### 2-3-1.環境変数保存
-
+### 1.3.1. 環境変数保存
 ユーザー名を後のタイミングでコマンド内で利用することがあるため、以下のコマンドを実施してください。
 ```
 export USER_NAME=`oc whoami`
@@ -108,8 +122,7 @@ export USER_NAME=$USER_NAME
 EOF
 ```
 
-### 2-3-２.プロジェクト作成
-
+### 1.3.2.プロジェクト作成
 後のためにプロジェクトを作成します。プロジェクトは Kubernetes でいう Namespace と同じで、リソースの名前を一意にするエリアです。
 
 ```
@@ -118,8 +131,7 @@ oc new-project ${USER_NAME}-msa
 oc project ${USER_NAME}-monolith
 ```
 
-### Option 2-4 寄り道
-
+### Option 1.4. 寄り道
 ここで作業の早い方向けの寄り道をしてみましょう。
 まず、CodeReadyWorkspacesのTerminalがコンテナ内にあることを確認するためにいくつかのコマンドを実行してみましょう。
 
@@ -162,7 +174,7 @@ jboss         38  0.0  0.1  39020 23408 pts/0    S    Mar08   0:00 /bin/bash
 jboss         95  0.0  0.0  51868  3660 pts/0    R+   00:49   0:00 ps aux
 ```
 
-通常のマシンでこのコマンドを実行すると大量のプロセスが見つかるはずですが、psコマンド自体をいれてもたったの４つしか表示されません。
+通常のマシンでこのコマンドを実行すると大量のプロセスが見つかるはずですが、psコマンド自体をいれてもたったの4つしか表示されません。
 特にPID 1のプロセスに注目してください。通常のマシンであればPID 1は init になるはずです。しかし、ここはコンテナの中なので tail プロセスになっているのが特徴的です。
 
 コンテナの内部からは、そこがコンテナであるかどうかというのはなかなか分かりづらいことがおわかりいただけたでしょうか。
@@ -211,29 +223,23 @@ kubectl config view
 
 先ほどと同じ内容が見えたはずです。 kubectl は OpenShift とも会話することができます。
 
-## ３. モノリスアプリケーションのデプロイ
-
+---
+## 2. モノリスアプリケーションのデプロイ
 OpenShift へのログインが完了したら、いよいよモノリスをデプロイしていきます。
 
 サンプルとして利用するモノリスアプリケーションは、このような構造をしています。
-Apache + PHP と Java VM の２プロセスを必要としています。
-
+Apache + PHP と Java VM の2プロセスを必要としています。
 ![monolith1.png](./images/monolith1.png)
 
 呼び出しシーケンスはこのような流れで行われます。PHPがフロントエンドを担当し、Java(SpringBoot)がバックエンドを担当しています。
-
 ![monolith2.png](./images/monolith2.png)
 
----
-
-### FAQ 1
-
-モノリスをコンテナにする際にこういった質問がよくあります。
-
+**FAQ**
+モノリスをコンテナ化する際に議題にあがる質問を一例としてあげます。
 
 Q. 我々が利用しているアプリケーションはメインプロセス以外に、複数のプロセスをデーモンとして必要としています。１コンテナ１プロセスと聞いていますが、こういったアプリケーションはどうすればコンテナにいれられるのでしょうか？
 
-A. 方法は２つあります。１つはメインとなるアプリケーションをフォワードプロセスとして起動しておき、その他のデーモンをバックグラウンドプロセスとして起動する方法です。ただし、これは以下のような理由であまりおすすめしません。
+A. 方法は2つあります。１つはメインとなるアプリケーションをフォワードプロセスとして起動しておき、その他のデーモンをバックグラウンドプロセスとして起動する方法です。ただし、これは以下のような理由であまりおすすめしません。
 
 1. コンテナはバックグラウンドプロセスを起動したままメインプロセスの再起動しようとしても、コンテナ自体が終了してしまうのでコンテナまるごとでしか再起動できなくなる
 1. メインアプリケーションもバックグラウンド化する方法があるが、ここまでやってしまうとコンテナ化するメリットをすべて享受できなくなる
@@ -245,19 +251,17 @@ A. 方法は２つあります。１つはメインとなるアプリケーシ�
 1. 同一 Pod 内のコンテナはネットワークとマウントした外部ストレージを共有している（ファイルシステムは共有していない）
 1. どれか１つのコンテナが終了すると、Pod も終了する
 
-２番めの特徴によって、コンテナ内のプロセス同士は、loopback インターフェース( localhost もしくは127.0.0.1 )か、マウントした外部ストレージを経由して通信することが可能になります。
-ですが、３番めの特徴があるため、コンテナプロセス全体は一蓮托生になってしまいます。
+2番めの特徴によって、コンテナ内のプロセス同士は、loopback インターフェース( localhost もしくは127.0.0.1 )か、マウントした外部ストレージを経由して通信することが可能になります。
+ですが、3番めの特徴があるため、コンテナプロセス全体は一蓮托生になってしまいます。
 
 ---
 
-本ハンズオンでは、サイドカーパターンを採用して、モノリスを 1 Pod ２ コンテナで起動することにします。
-
+本ハンズオンでは、サイドカーパターンを採用して、モノリスを 1 Pod 2 コンテナで起動することにします。
 ![monolith3.png](./images/monolith3.png)
 
 サイドカー構成にすることによる端的なメリットとして、ベースイメージが探しやすくなることがあります。apache + PHP 、もしくは Java のみ、といったコンテナイメージはコミュニティが公式イメージとして公開していることが多いですが、両方が入っているコンテナイメージはあまり存在しません。カスタムイメージを作ることも可能ですが、わざわざそこまでするよりはサイドカーパターンを適用するほうが、Kubernetes Way といえます。
 
-## 3.1 デプロイに必要なリソースを準備する
-
+## 2.1. デプロイに必要なリソースを準備する
 Kubernetes にアプリをデプロイする基本的な流れは以下のような順序になります。
 
 1. アプリケーションを用意する
@@ -268,12 +272,10 @@ Kubernetes にアプリをデプロイする基本的な流れは以下のよう
 1. Manifest をKubernetesに適用する
 1. Kubernetes が Manifest に従ってアプリケーション Pod を起動する
 
-モノリスアプリケーションのデプロイでは、１〜４は完了しており Kubernetes にデプロイするばかりという状況から実施していきます。
+モノリスアプリケーションのデプロイでは、１〜4は完了しており Kubernetes にデプロイするばかりという状況から実施していきます。
 
-## 3.2 Manifestの準備
-
+## 2.2. Manifestの準備
 Manifest とは Kubernetes に行いたい設定を記述したファイルのことをいいます。 YAML 形式と JSON 形式が使えます。一般的に 人間にとって可読性の高い YAML 形式をよく用います。
-
 モノリスアプリケーションのデプロイで利用する Manifest は以下のようなものを使います。
 
 monolith.yaml
@@ -326,7 +328,7 @@ spec:
     targetPort: 8080
 ```
 
-ここで注目すべきポイントは２つです。
+ここで注目すべきポイントは2つです。
 
 注目ポイント1
 ```
@@ -342,7 +344,7 @@ spec:
          - containerPort: 8080
            protocol: TCP
 ```
-サイドカーパターンを利用するので、コンテナは２つ指定されています。ネットワークを共有するので Portの競合を避けるようになっています。
+サイドカーパターンを利用するので、コンテナは2つ指定されています。ネットワークを共有するので Portの競合を避けるようになっています。
 
 注目ポイント2
 ```
@@ -358,11 +360,8 @@ Deployment の strategy は、コンテナイメージなどを変更してア�
 では、なぜ Recreate を指定しているのでしょうか。
 ステートを持つモノリスの場合、ブロックストレージをマウントしているケースがあります。ブロックストレージは安全のために単一の VM からしかマウントできないので、Rolling 戦略を実行してしまうと、別の Node に新しい Pod がスケジュールされたケースでは Pod が起動できなくなります（仮にできたとしてもアプリケーションが複数起動できるかは別問題として存在）。これを避けるために Recreate を指定しています。
 
-## 3.3 モノリスアプリケーションのデプロイ実施
----
-
+## 2.3. モノリスアプリケーションのデプロイ実施
 デプロイを行うために手元に Manifest を準備しましょう。
-
 ```
 cd /projects
 git clone https://gitlab.com/openshift-starter-kit/msa-guide.git
@@ -371,10 +370,9 @@ cat monolith.yaml
 ```
 
 ダウンロードしたファイルは、CodeReadyWorkspaces の左下の WORKSPACE のペインから開いてGUI上で表示することもできます。
-
 ![monolith4.png](./images/monolith4.png)
 
-それではモノリスアプリケーションをデプロイしていきましょう。３通りの方法があります。
+それではモノリスアプリケーションをデプロイしていきましょう。3通りの方法があります。
 
 Kubernetes Way
 ```
@@ -387,7 +385,6 @@ oc apply -f monolith.yaml
 ```
 
 Web Console から
-
 ![monolith5.png](./images/monolith5.png)
 
 どれも結果は同一になります。確認してみましょう。
@@ -403,18 +400,13 @@ oc get all
 ```
 
 Web Console から
-
 ![monolith6.png](./images/monolith6.png)
 
-
-## 3.4 モノリスアプリケーションへのアクセス
-
-
+## 2.4. モノリスアプリケーションへのアクセス
 ここでは OpenShift Kubernetes がどうやって Pod へのアクセス手段を提供しているか見ていきます。
 Service と Route というリソースです。
 
-### 3.4.1 Service の動作確認 
-
+### 2.4.1. Service の動作確認 
 ではデプロイで来たモノリスアプリケーションの動作を確認してみましょう。 CodeReadyWorkspaces の Terminal 内から curl で確認します。
 
 ```
@@ -468,10 +460,7 @@ my-svc
 my-svc.my-namespace.svc
 ```
 
-
-
-### 3.4.2 Route の追加と動作確認
-
+### 2.4.2. Route の追加と動作確認
 Service 名でアクセスが可能なのは同一 Kubernetes 内に限定されます。
 OpenShift においては クラスタ外から Pod にアクセスする方法はいくつかあります。
 
@@ -501,15 +490,12 @@ monolith   monolith-user1-monolith.apps.xxx.ocp1.openshiftapps.com          mono
 ```
 
 Web Console から
-
 ![monolith7.png](./images/monolith7.png)
 
 URLをブラウザーで開いた状態
-
 ![monolith8.png](./images/monolith8.png)
 
 #### OpenShift Router とは
-
 OpenShift Router は OpenShift の外からの http 通信を Pod に流すための仕組みです。
 実装は HAProxy であるため、やろうと思えばかなり高度な設定ができます。
 
@@ -523,13 +509,10 @@ OpenShift Router は OpenShift の外からの http 通信を Pod に流すた�
 
 その後、両者は歩み寄っていき、 Kubernetes 上で HAProxy を利用したり、 OpenShift 上で Ingress を利用したり、相互の垣根はどんどんなくなってきています。
 
-
-## 3.5 基本的な運用方法
-
+## 2.5. 基本的な運用方法
 最も基本的な運用方法として、アプリケーションのログの参照とアプリケーションの再起動の仕方を見ていきましょう。
 
-### 3.5.1 アプリケーションのログの見方
-
+### 2.5.1. アプリケーションのログの見方
 OpenShift や Kubernetes においては、アプリケーションログは標準出力に出力することが推奨されています。標準出力に出力しておくことで、ログの収集や閲覧をオーケストレーター側の機能にまかせることができます。
 
 サンプルのモノリスアプリケーションもログは標準出力に出力しています。ログの内容をみてみましょう。
@@ -570,20 +553,15 @@ methods in repositoryRestExceptionHandler
 ```
 
 Web Console から
-
 ![monolith9.png](./images/monolith9.png)
-
 ![monolith10.png](./images/monolith10.png)
 
-### 3.5.2 アプリケーションの再起動の仕方
-
+### 2.5.2. アプリケーションの再起動の仕方
 次はアプリケーションの再起動の仕方をみていきます。
 OpenShift Kubernetes においては再起動は Pod の削除と再作成を意味します。
+Deployment においては、再起動の仕方は Pod を削除するか、 rollout をさせるかの2つがメジャーな方法となります。
 
-Deployment においては、再起動の仕方は Pod を削除するか、 rollout をさせるかの２つがメジャーな方法となります。
-
-#### 3.5.2.1 Pod を削除する
-
+* 3.5.2.1. Pod を削除する
 これは Deployment や StatefulSet といった Pod の面倒をみてくれるリソース経由で Pod が維持されている場合に有効な手段で、もっとも原始的な方法になります。
 
 CLIより
@@ -609,8 +587,7 @@ STATUS が ContainerCreating から Running に変化したら、CTRL ＋　C �
 
 削除されると、 Deployment が内部で利用している replication controler によって、 Pod 数を 1 に戻そうとする動きになり、結果として再起動となります。
 
-#### 3.5.2.２ ロールアウトさせる
-
+* ロールアウトさせる
 削除ではいかにも危険な雰囲気を感じる場合や、 Deployment strategy を Rolling にしてあり、もっと安全に再起動が行われてほしいときはこちらが有効です。
 
 CLIから
@@ -621,7 +598,6 @@ oc get pods -w
 ```
 
 Web Console には同じ操作をするメニューはありません。ただし、deployment とよく似た deploymentconfig であればメニューが存在します。
-
 ![monolith11.png](./images/monolith11.png)
 
 実は deployment における rollout は比較的新しいコマンドになります。下記の Issue で長いあいだ議論されていました。 
@@ -630,8 +606,8 @@ https://github.com/kubernetes/kubernetes/issues/13488
 一方、 OpenShift における deployment config においては、 OpenShift v3 の最初から rollout の実行を行うことができました。 細かいところですが、OpenShift と Kubernetes が近づいているところの１つです。
 (Kubernetes でも OpenShift のように xx したい、という要望があるようです)
 
-## 4 Micro Service Archtecture への移行
-
+---
+## 3. Micro Service Archtecture への移行
 ここまでコンテナ化したモノリスアプリケーションを扱ってきました。ここからは Micro Service Architecture への移行を体験していきます。
 今回コンテナ環境にリフトしたモノリスアプリケーションは、すでに Front End と Back End が Pod 内部で別コンテナとして別れていました。わざわざサイドカーパターンを使うより、別 Pod にしたほうが合理的ではないかと考えた方もいるのではないかと思います。Micro Service Architecture をデプロイする方法を知っておくことがキーポイントになります。
 
@@ -669,11 +645,9 @@ EOS
 
 
 Web Console のプロジェクトを userxx-msa に切り替えておいてください。
-
 ![msa0.png](./images/msa0.png)
 
-### 4.1 Frontend デプロイ
-
+### 3.1. Frontend デプロイ
 まず、 Frontend をデプロイしていきます。
 
 CLより
@@ -716,7 +690,7 @@ oc new-app というコマンドを実施たところ複数の Resource が作�
 - service
 
 
-このコマンドは下記のうち、２〜６を一気にやってしまえる便利コマンドです。 oc new-app できるようにアプリケーションを用意する必要はありますが、アプリケーションの開発者にとっては非常に便利なコマンドです。
+このコマンドは下記のうち、2〜６を一気にやってしまえる便利コマンドです。 oc new-app できるようにアプリケーションを用意する必要はありますが、アプリケーションの開発者にとっては非常に便利なコマンドです。
 
 1. アプリケーションを用意する
 1. Docker ファイルを準備する
@@ -739,8 +713,7 @@ bash-4.4$ oc expose service frontend
 route.route.openshift.io/frontend exposed
 ```
 
-### 4.2 Payment Catalog デプロイ
-
+### 3.2. Payment Catalog デプロイ
 では次は Pyament サービスと Catalog サービスをデプロイしていきましょう。
 アプリケーションの初回ビルドで大量の maven artifact をダウンロードするので時間がかかります。
 
@@ -763,6 +736,7 @@ oc label deploy frontend app.kubernetes.io/part-of=microservice-app
 oc label dc  catalog app.kubernetes.io/part-of=microservice-app
 oc label dc  payment app.kubernetes.io/part-of=microservice-app
 ```
+
 結果
 ![msa1.png](./images/msa1.png)
 
@@ -773,8 +747,7 @@ frontend にカーソルを乗せると矢印がでるので、ドラッグア�
 
 このようにマイクロサービス間の関係を可視化することができます。
 
-### 4.3 【Option】 Cloud Native Runtime *Quarkus* とは
-
+### 3.3. Cloud Native Runtime *Quarkus* とは (Optional)
 モノリスアプリケーションのバックエンドは SpringBoot で作られていましたが、マイクロサービスのバックエンドは Quarkus というフレームワークで書き直しています。
 
 Quarkus は Java を Kubernetes でより効率よく動かすために Fat になりすぎた JakaｒtaEE（旧 JavaEE）の仕様を踏襲せずに、クラウドネイティブなアプリケーションに必要な機能のみで作り直したフレームワークです。起動が極めて早いこととフットプリントが小さいことと開発者向けの便利な機能がたくさんあることが特徴です。
@@ -802,11 +775,9 @@ Quarkus のアスキーアートのあとに *started in 0.969s* とでていま
 メモリの使用量もみてみましょう。
 
 モノリスのメモリ使用率
-
 ![msa3.png](./images/msa3.png)
 
 マイクロサービス(Payment)のメモリ使用率
-
 ![msa4.png](./images/msa4.png)
 
 モノリスアプリケーションは apache + PHP と Java SpringBoot がサイドカーとしてデプロイされていました。対してマイクロサービスの Payment は Quarkus 単体ですが、これくらいの差があります。 
@@ -817,8 +788,7 @@ Quarkus は OpenShift のサブスクリプションに含まれており、 Red
 https://ja.quarkus.io/guides/
 
 
-### 4.4 マイクロサービス内のDNS名解決のルール作り
-
+### 3.4. マイクロサービス内のDNS名解決のルール作り
 3.4.1 にて Kubernetes の Service のルールを確認しました。
 マイクロサービスにおいてはDNS名を解決する頻度がモノリスアプリケーションに比べて飛躍的に増えます。そのためアプリケーションの接続先のホスト名やIPアドレスなどをどうやって設定していくかはあらかじめルールを作っておくべきです。
 
@@ -853,8 +823,7 @@ https://ja.quarkus.io/guides/
 
 DNSの名前解決ルールの策定方針としては、サービス名とポート名は外から与える形式を採るのが望ましいでしょう。
 
-### 4.5 ルールの中心に Infrastructer as Code
-
+### 3.5. ルールの中心に Infrastructer as Code
 マイクロサービスの管理において中心的な考え方になってくるのが Infrastructer as Code です。
 ここでは狭い範囲で Infrastructer as Code の考え方見ていきます。
 
@@ -875,7 +844,7 @@ spec:
 ```
 
 サンプルアプリケーション側には Service 名が直接埋め込まれているので、これも Infrastructer as Code の考え方で整理しましょう。
-Kubernetes において アプリケーションの設定という Infrastructure を Code にしてくれるリソースは大きく３つ存在します。
+Kubernetes において アプリケーションの設定という Infrastructure を Code にしてくれるリソースは大きく3つ存在します。
 
 - ConfigMap
 - Deployment などにおける Env
@@ -907,7 +876,7 @@ data:
 
 ConfigMap は環境変数を通して Pod に伝える方法と、読み取り専用の擬似的なファイルとして Pod 内にマウントしてしまう方法があります。
 
-環境変数を使う方法いくつかパターンがありますが、よく使うのは以下の２つです。直接定義する場合と、ConfigMap の キー/バリュー を指定する方法です。
+環境変数を使う方法いくつかパターンがありますが、よく使うのは以下の2つです。直接定義する場合と、ConfigMap の キー/バリュー を指定する方法です。
 
 ```
 apiVersion: apps/v1
@@ -963,28 +932,23 @@ https://kubernetes.io/ja/docs/concepts/configuration/secret/
 
 Infrastructure　as Code を行うと、コードのメンテナンス性とインフラのメンテナンス性が同一になる、ということに注目してください。Dev と Ops が一緒になって、これまでのアプリケーション・インフラの保守双方のプラクティス元に議論するべきポイントです。小さいところから DevOps をはじめてみましょう。
 
-### 4.6 マイクロサービスに変更を加える
-
+### 3.6. マイクロサービスに変更を加える
 次はマイクロサービスに変更を加えてみましょう。 サンプルアプリケーションのデプロイメントにはかっちりしたパイプラインはまだありませんが、OpenShift をつかってアプリケーションを構築しているので、ある程度の自動化とInfrastructure as Code が実践された状態になっています。
 
 まずは
 
-#### 4.6.1 Frontend の パラメーター外出し化
-
+#### 3.6.1 Frontend の パラメーター外出し化
 まずは小規模な変更を行ってみましょう。動作はそのままで技術的負債を返済します。
 Frontend の直接アプリケーションに記述しているパラメーターを OpenShift からインジェクションするように変更します。
 
-##### 4.6.1.1 Deployment に環境変数を追加する
-
+* Deployment に環境変数を追加する
 Frontend の Deployment を変更していきますが、現在マイクロサービスは開発途中ということで Manifest をまだ管理していない状況です。
 ここでは Web Console から環境変数の編集を実施してみましょう。
 
 Web Console の Topology から以下のように Frontend の Deployment を編集する画面を開いていってください。
-
 ![msa7.png](./images/msa7.png)
 
 画面をスクロールしていくと環境変数の編集画面があります。
-
 ![msa8.png](./images/msa8.png)
 
 下記のように編集して、保存してください。
@@ -996,14 +960,12 @@ Web Console の Topology から以下のように Frontend の Deployment を編
 
 ![msa9.png](./images/msa9.png)
 
-##### 4.6.1.2 アプリケーションの変更
+* アプリケーションの変更
 ではアプリケーションを変更します。
-
 CodeReadyWorkspaces の左下のペインから msa-app → microservices → frontend と開いていき、 index.php を開いてください。
-
 ![msa6.png](./images/msa6.png)
 
-３２行目と４２行目が編集対象です。
+32行目と42行目が編集対象です。
 CodeReadyWorkspaces はデフォルトは AutoSave なので編集すれば自動的に保存されています。
 
 32行目 編集前
@@ -1070,17 +1032,13 @@ oc start-build frontend
 すぐに Web Console を開いて Frontend の Deployment の様子をみてみましょう。
 
 まずはビルドが進行しているマークがでます。（ここをクリックするとビルドのログを見ることもできます）
-
 ![msa10.png](./images/msa10.png)
 
 次にアプリケーションが Rolling Strategy で Deploy される様子が見えます。
-
 ![msa11.png](./images/msa11.png)
 
-#### Option 4.6.3 Catalog の変更
-
+#### 3.6.2. Catalog の変更 (Optional)
 進行が速い方は Catalog も編集してみましょう。少し階層が深いですが、 CatalogResource.java までたどってください。
-
 ![msa12.png](./images/msa12.png)
 
 14行目が UI に表示されている在庫と価格を返却している部分です。
@@ -1106,7 +1064,6 @@ cd /projects/msa-app/microservices/catalog
 ```
 
 Frontend をブラウザで開いて結果が反映されているか確認してみてください。
-
 ![msa13.png](./images/msa13.png)
 
 Payment も Quarkus アプリケーションなので同じような手順で変更をすることができます。
@@ -1115,7 +1072,7 @@ Payment も Quarkus アプリケーションなので同じような手順で変
 
 https://ja.quarkus.io/version/1.11/guides/rest-data-panache
 
-#### Option 4.6.４ Catalog に ヘルスチェック を追加
+#### 3.6.3. Catalog に ヘルスチェック を追加 (Optional)
 
 OpenShift Kubernetes 上でマイクロサービスを動かして開発を加速していく際には、個々のサービスに対する Observability を確保しておくことが推奨されます。
 最も初歩的な Observability の確保の仕方として、 Readiness Probe と Livness Probe にアプリケーションを対応させる方法があります。
@@ -1134,23 +1091,18 @@ cd /projects/msa-app/microservices/catalog
 
 この Extension が追加されている状態で deploy を行い直すことで、 OpenShift 側の設定も変わります。
 実施前の Deployment は、このような警告がでていましたが、 Deploy が完了すると警告は消えます。つまり Deployment に対して Probe の設定が行われたということです。
-
 ![msa15.png](./images/msa15.png)
 
 どのように設定されたのか見てみましょう。 catalog の Deployment Config のアクションメニューから、ヘルスチェックの編集を選択してください。
-
 ![msa16.png](./images/msa16.png)
 
 緑字で「追加済みの Rediness プローブ」 というところをクリックすると、このように設定されていることが確認できます。
-
 ![msa17.png](./images/msa17.png)
 
-### ４．７. Kubernetes にスケーラブルなアプリケーションを配置することで得られるもの
-
+### 3.7. Kubernetes にスケーラブルなアプリケーションを配置することで得られるもの
 ここからはスケーラビリティのあるアプリケーションがコンテナ基盤上でどのような威力をもつのか体感していきましょう。
 
-#### 4.7.1 スケールアウト実行
-
+#### 3.7.1. スケールアウト実行
 まずは作成したマイクロサービス１つずつをスケールアウトさせます。
 
 CLIより
@@ -1162,13 +1114,10 @@ oc get pods|grep Running
 ```
 
 Web Console より
-
 ![resilience1.png](./images/resilience1.png)
 
 数を直接入れたい場合
-
 ![resilience2.png](./images/resilience2.png)
-
 ![resilience3.png](./images/resilience3.png)
 
 結果
@@ -1190,8 +1139,7 @@ payment-1-g9kxv             1/1     Running     0          10m
 payment-1-lkq2f             1/1     Running     0          19h
 ```
 
-#### 4.7.2 MSA レジリエンス体験 （連続アクセス ＆ アプリケーションを止める）
-
+#### 3.7.2. MSA レジリエンス体験 （連続アクセス ＆ アプリケーションを止める）
 まずは、アプリケーションに連続したアクセスをかけましょう。１秒に一回 Frontend の画面を要求します。
 
 CLIより
@@ -1207,37 +1155,29 @@ done
 アクセスを止める場合は、CTRL + C を押してください。
 
 次はアプリケーションを断続的に停止します。Web Console の Administrator パースペクティブで Pod の一覧画面を開きます。
-
 ![resilience4.png](./images/resilience4.png)
-
 ![resilience5.png](./images/resilience5.png)
 
 Pod に Running のフィルターをかけます。
-
 ![resilience6.png](./images/resilience6.png)
 
-Web Console と CLI でのアクセス実行状況が同時に見えるようにこのようにウィンドウを配置してください。（２画面以上あるかたはそれぞれ別画面で開いても OK です）
-
+Web Console と CLI でのアクセス実行状況が同時に見えるようにこのようにウィンドウを配置してください。（2画面以上あるかたはそれぞれ別画面で開いても OK です）
 ![resilience7.png](./images/resilience7.png)
 
 Web Console から適当に Pod を選んで削除してみましょう。
-
 ![resilience8.png](./images/resilience8.png)
 
 CLI にでるログに注目してください。概ね１秒毎にアクセスをしているので、 Date のところが１秒ずつ進んでいるはずです。
-
 ![resilience9.png](./images/resilience9.png)
 
 Pod を何度も削除してみてください。そのたびにアプリケーションが起動してきて、このログが流れることを止めるが非常に難しいことが実感できるかと思います。
 
 *勝手に壊れた機械を人間が手動で直す* という経験はこれまで何度もあったと思いますが、 *人間が壊した機械を機械が勝手に直す* 体験ははじめてではないでしょうか。これが Kubernetes を利用する際に、最初に得るべきメリットです。 
 
-#### 4.7.3 Option MSA 無停止アプリケーションリリース
-
+#### 3.7.3. MSA 無停止アプリケーションリリース (Optional)
 進行が早いは、連続アクセスを実行したまま 4.6 のような手順でアプリケーションを変更してみてください。 
 
-#### 4.7.4 MSA トラブル体験
-
+#### 3.7.4. MSA トラブル体験
 Kubernetes OpenShift の基本的なメリットは先程体感することができました。止めようとしてもなかなか止まらないことが体験できました。
 次はアプリケーションが個別に完全に止まってしまった場合にどういったことがおこるかを体験します。
 
@@ -1267,7 +1207,6 @@ done
 ![resilience10.png](./images/resilience10.png)
 
 Frontend をブラウザで開くと、このような画面が出ています。
-
 ![resilience11.png](./images/resilience11.png)
 
 これは OpenShift Router が Frontend の Redady な Pod を探したものの、１つもないのでエラーで応答してくれているのでこのようにすぐにエラーが返却されています。
@@ -1342,8 +1281,7 @@ oc scale deploymentconfig catalog --replicas=2
 oc scale deploymentconfig payment --replicas=2
 ```
 
-#### 4.7.5 MSA トラブルまとめ
-
+#### 3.7.5. MSA トラブルまとめ
 ここまで実施してきたトラブルを表にまとめてみました。
 
 |                  | Frontend | Catalog | Payment | E2Eの状態                                                                     | 
@@ -1356,25 +1294,21 @@ oc scale deploymentconfig payment --replicas=2
 MSA における異常時の挙動は、にみなさんのご想像どおりだったでしょうか？ おそらく Gateway TImeout が最も望ましくない挙動っだったのではないかと思います。
 この体験では単一サービスの障害だけをシミュレートしましたが、フィールドに置いてはすべての組み合わせのテストを要求されることもあるでしょう。その場合にマイクロサービスが過剰に分割されていると、テストの組合せが爆発がおきることが容易に想像できます。
 
-#### 4.7.6 Service Mesh
-
+#### 3.7.6. Service Mesh
 マイクロサービスのトラブルが発生するといったいどういうことがおきるのか、ということをすべて洗い出すのはなかなかに困難なミッションとなります。個別言語のライブラリや、 OS に属している TCP/IP ライブラリによっても少しずつ挙動が異なります。
 これらをまるっとどうにかしてしまおうというのが、 Servie Mesh という考え方です。Envoy Proxy をサイドカーとして Pod の中に埋め込み、 iptables を駆使して通信を横取りすることでマイクロサービスにおける通信をオーケストレーションしてしまおうというものです。
-
 ![resilience14.png](./images/resilience14.png)
 
 「Service Mesh をいつ導入するべきか」、という問いに明確な答えはありません。
 導入の議論をしはじめる目安は、マイクロサービスを扱うビジネス・エンジニアのグループの単位が複数になるタイミングです。
 
-## 5. まとめ
-
+---
+## 4. まとめ
 ここまで、サンプルアプリケーションのモノリスアプリケーションをマイクロサービスに分割、・Deploy 変更する方法を体験してきました。
 また、 Deploy したマイクロサービスがどういったレジリエンスを持つのか、持たないのかについても体験しました。
 
 ここから先は、「どの単位にマイクロサービスによいのか」、の深堀りが必要になってくるでしょう。その際は顧客側の体験と開発者側の体験、双方が重要になってきます。ビジネスとシステムの規模、複雑度、サービスを提供する組織のありかたなどの考慮が必要になります。
-
 ![msa18.png](./images/msa18.png)
-
 ![msa14.png](./images/msa14.png)
 
 マイクロサービスはビジネスを加速させるためのプラクティスですが、テクノロジーなしではマイクロサービスを正しく操ることはできません。サービスの最適な粒度を見つけるためには不断の努力を要しますが、苦労して分割・サイズダウンしたマイクロサービスが。再びモノリス化してしまわないように、コンテナプラットフォームの機能を活かしながらサービスの複雑さをコントロールしていってください。
