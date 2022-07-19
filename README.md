@@ -12,11 +12,11 @@ Container Stater Kit で実施するハンズオンの手順を紹介します�
 
 OpenShiftのWeb Consoleにログインしましょう。URLとユーザー/パスワードは管理者から割り当てられたものを使用してください。
 
-![webconsole-login-1.png](./webconsole-login-1.png)
+![webconsole-login-1.png](./images/webconsole-login-1.png)
 
-![webconsole-login-2.png](./webconsole-login-2.png)
+![webconsole-login-2.png](./images/webconsole-login-2.png)
 
-![webconsole-login-3.png](./webconsole-login-3.png)
+![webconsole-login-3.png](./images/webconsole-login-3.png)
 
 Developer パースペクティブへようこそというダイアログが出ればログインは成功です。ツアーはスキップしてください。
 
@@ -27,42 +27,42 @@ Developer パースペクティブへようこそというダイアログが出�
 
 Web Consoleの右上のアプリケーションボタンを押して、CodeReadyWorspacesを選択してください。
 
-![crw1.png](./crw1.png)
+![crw1.png](./images/crw1.png)
 
 再度Web Consoleのログイン画面と同じ認証画面が表示されるので、同じ用にログイン方法を選んで、ユーザー/パスワードを入力してください。
 
 下記の画面は Allow selected permissions のボタンを押してください。
 
-![crw2.png](./crw2.png)
+![crw2.png](./images/crw2.png)
 
 さきほどのボタン押下でアカウント情報がOpenShiftのoAuthから連携されました。Eメールアドレスが不足しているので、下記の画面が表示されます。
 割り当てあられたユーザー名@example.com と入力してSubmitをおしてください。
 
 例: user1@example.com
 
-![crd3.png](./crd3.png)
+![crd3.png](./images/crd3.png)
 
 ログインが成功するとSampleワークスペースが並んだダッシュボードが表示されます。CodeReadyWorkspacesは、開発を行いたい言語に必要なツールスタックをひとまとめにし、WebIDEとしてデプロイすることができます。
 
 本ハンズオンでは、モノリスをマイクロサービスに分割する際に Quarkus というJavaフレームワークを利用します。少しスクロールして Quarkus をクリックしてください。
 
-![crd4.png](./crd4.png)
+![crd4.png](./images/crd4.png)
 
 ワークスペースのスタートに少し時間がかかります。
 
-![crd5.png](./crd5.png)
+![crd5.png](./images/crd5.png)
 
 起動が完了すると、このようにVSCodeライクなIDEが起動します。
 
-![crd6.png](./crd6.png)
+![crd6.png](./images/crd6.png)
 
 Terminalを起動するために画面右側のキューブのマークをクリックしてから >_ New Terminal をクリックしてください。
 
-![crd7.png](./crd7.png)
+![crd7.png](./images/crd7.png)
 
 このようにTerminalが起動します。ハンズオン前半はWebIDEとしての機能はつかわず、Terminalとしての利用が主となるので、境界を上方にドラッグして領域を広げてもよいでしょう。
 
-![crd8.png](./crd8.png)
+![crd8.png](./images/crd8.png)
 
 このTerminalはOpenShift上のLinuxコンテナにリモートシェルで接続しているようなものと考えてください。そのためコマンドはRed Hat Enterprise Linux基準になります。
 起動しているShellはBashなのでコマンドのタブ補完が可能です。
@@ -74,15 +74,15 @@ Terminalを起動するために画面右側のキューブのマークをクリ
 
 OpenShift Web Consoleの画面の右上のユーザー名の部分をクリックして、ログインコマンドのコピーを選択してください。これまで通りログインメソッドは lab-login を選択してください。
 
-![cli-login1.png](./cli-login1.png)
+![cli-login1.png](./images/cli-login1.png)
 
 Display Token という文字が表示されるのでクリックしてください。
 
-![cli-login2.png](./cli-login2.png)
+![cli-login2.png](./images/cli-login2.png)
 
 Loginコマンドが表示されるので oc から始まる文字列をコピーしてください。
 
-![cli-login3.png](./cli-login3.png)
+![cli-login3.png](./images/cli-login3.png)
 
 CodeReadyWorkspacesのTerminalに戻って、コピーしてログインコマンドをはりつけてエンターキーを押してください。
 このように表示されればログインは成功です。
@@ -218,11 +218,11 @@ OpenShift へのログインが完了したら、いよいよモノリスをデ�
 サンプルとして利用するモノリスアプリケーションは、このような構造をしています。
 Apache + PHP と Java VM の２プロセスを必要としています。
 
-![monolith1.png](./monolith1.png)
+![monolith1.png](./images/monolith1.png)
 
 呼び出しシーケンスはこのような流れで行われます。PHPがフロントエンドを担当し、Java(SpringBoot)がバックエンドを担当しています。
 
-![monolith2.png](./monolith2.png)
+![monolith2.png](./images/monolith2.png)
 
 ---
 
@@ -252,7 +252,7 @@ A. 方法は２つあります。１つはメインとなるアプリケーシ�
 
 本ハンズオンでは、サイドカーパターンを採用して、モノリスを 1 Pod ２ コンテナで起動することにします。
 
-![monolith3.png](./monolith3.png)
+![monolith3.png](./images/monolith3.png)
 
 サイドカー構成にすることによる端的なメリットとして、ベースイメージが探しやすくなることがあります。apache + PHP 、もしくは Java のみ、といったコンテナイメージはコミュニティが公式イメージとして公開していることが多いですが、両方が入っているコンテナイメージはあまり存在しません。カスタムイメージを作ることも可能ですが、わざわざそこまでするよりはサイドカーパターンを適用するほうが、Kubernetes Way といえます。
 
@@ -372,7 +372,7 @@ cat monolith.yaml
 
 ダウンロードしたファイルは、CodeReadyWorkspaces の左下の WORKSPACE のペインから開いてGUI上で表示することもできます。
 
-![monolith4.png](./monolith4.png)
+![monolith4.png](./images/monolith4.png)
 
 それではモノリスアプリケーションをデプロイしていきましょう。３通りの方法があります。
 
@@ -388,7 +388,7 @@ oc apply -f monolith.yaml
 
 Web Console から
 
-![monolith5.png](./monolith5.png)
+![monolith5.png](./images/monolith5.png)
 
 どれも結果は同一になります。確認してみましょう。
 
@@ -404,7 +404,7 @@ oc get all
 
 Web Console から
 
-![monolith6.png](./monolith6.png)
+![monolith6.png](./images/monolith6.png)
 
 
 ## 3.4 モノリスアプリケーションへのアクセス
@@ -502,11 +502,11 @@ monolith   monolith-user1-monolith.apps.xxx.ocp1.openshiftapps.com          mono
 
 Web Console から
 
-![monolith7.png](./monolith7.png)
+![monolith7.png](./images/monolith7.png)
 
 URLをブラウザーで開いた状態
 
-![monolith8.png](./monolith8.png)
+![monolith8.png](./images/monolith8.png)
 
 #### OpenShift Router とは
 
@@ -571,9 +571,9 @@ methods in repositoryRestExceptionHandler
 
 Web Console から
 
-![monolith9.png](./monolith9.png)
+![monolith9.png](./images/monolith9.png)
 
-![monolith10.png](./monolith10.png)
+![monolith10.png](./images/monolith10.png)
 
 ### 3.5.2 アプリケーションの再起動の仕方
 
@@ -622,7 +622,7 @@ oc get pods -w
 
 Web Console には同じ操作をするメニューはありません。ただし、deployment とよく似た deploymentconfig であればメニューが存在します。
 
-![monolith11.png](./monolith11.png)
+![monolith11.png](./images/monolith11.png)
 
 実は deployment における rollout は比較的新しいコマンドになります。下記の Issue で長いあいだ議論されていました。 
 https://github.com/kubernetes/kubernetes/issues/13488
@@ -670,7 +670,7 @@ EOS
 
 Web Console のプロジェクトを userxx-msa に切り替えておいてください。
 
-![msa0.png](./msa0.png)
+![msa0.png](./images/msa0.png)
 
 ### 4.1 Frontend デプロイ
 
@@ -764,12 +764,12 @@ oc label dc  catalog app.kubernetes.io/part-of=microservice-app
 oc label dc  payment app.kubernetes.io/part-of=microservice-app
 ```
 結果
-![msa1.png](./msa1.png)
+![msa1.png](./images/msa1.png)
 
 frontend にカーソルを乗せると矢印がでるので、ドラッグアンドドロップして、 catalog と payment につなげてみましょう。
 
 結果
-![msa2.png](./msa2.png)
+![msa2.png](./images/msa2.png)
 
 このようにマイクロサービス間の関係を可視化することができます。
 
@@ -803,11 +803,11 @@ Quarkus のアスキーアートのあとに *started in 0.969s* とでていま
 
 モノリスのメモリ使用率
 
-![msa3.png](./msa3.png)
+![msa3.png](./images/msa3.png)
 
 マイクロサービス(Payment)のメモリ使用率
 
-![msa4.png](./msa4.png)
+![msa4.png](./images/msa4.png)
 
 モノリスアプリケーションは apache + PHP と Java SpringBoot がサイドカーとしてデプロイされていました。対してマイクロサービスの Payment は Quarkus 単体ですが、これくらいの差があります。 
 
@@ -830,7 +830,7 @@ https://ja.quarkus.io/guides/
 - Service は Port を隠蔽しない
 - Service は 配下に複数 Pod がいる場合、L3 ロードバランシングのイメージで単純ラウンドロビンしか行わない
 
-![msa5.png](./msa5.png)
+![msa5.png](./images/msa5.png)
 
 例えば、本ハンズオンでサンプルとして使っている Frontend の PHP アプリケーションでは、下記のように直接 Kubernetes に依存した書き方をしています。 
 
@@ -981,11 +981,11 @@ Frontend の Deployment を変更していきますが、現在マイクロサ�
 
 Web Console の Topology から以下のように Frontend の Deployment を編集する画面を開いていってください。
 
-![msa7.png](./msa7.png)
+![msa7.png](./images/msa7.png)
 
 画面をスクロールしていくと環境変数の編集画面があります。
 
-![msa8.png](./msa8.png)
+![msa8.png](./images/msa8.png)
 
 下記のように編集して、保存してください。
 
@@ -994,14 +994,14 @@ Web Console の Topology から以下のように Frontend の Deployment を編
 |  payment-service-host  |  payment:8080  |
 |  catalog-service-host  |  catalog:8080  |
 
-![msa9.png](./msa9.png)
+![msa9.png](./images/msa9.png)
 
 ##### 4.6.1.2 アプリケーションの変更
 ではアプリケーションを変更します。
 
 CodeReadyWorkspaces の左下のペインから msa-app → microservices → frontend と開いていき、 index.php を開いてください。
 
-![msa6.png](./msa6.png)
+![msa6.png](./images/msa6.png)
 
 ３２行目と４２行目が編集対象です。
 CodeReadyWorkspaces はデフォルトは AutoSave なので編集すれば自動的に保存されています。
@@ -1071,17 +1071,17 @@ oc start-build frontend
 
 まずはビルドが進行しているマークがでます。（ここをクリックするとビルドのログを見ることもできます）
 
-![msa10.png](./msa10.png)
+![msa10.png](./images/msa10.png)
 
 次にアプリケーションが Rolling Strategy で Deploy される様子が見えます。
 
-![msa11.png](./msa11.png)
+![msa11.png](./images/msa11.png)
 
 #### Option 4.6.3 Catalog の変更
 
 進行が速い方は Catalog も編集してみましょう。少し階層が深いですが、 CatalogResource.java までたどってください。
 
-![msa12.png](./msa12.png)
+![msa12.png](./images/msa12.png)
 
 14行目が UI に表示されている在庫と価格を返却している部分です。
 
@@ -1107,7 +1107,7 @@ cd /projects/msa-app/microservices/catalog
 
 Frontend をブラウザで開いて結果が反映されているか確認してみてください。
 
-![msa13.png](./msa13.png)
+![msa13.png](./images/msa13.png)
 
 Payment も Quarkus アプリケーションなので同じような手順で変更をすることができます。
 
@@ -1135,15 +1135,15 @@ cd /projects/msa-app/microservices/catalog
 この Extension が追加されている状態で deploy を行い直すことで、 OpenShift 側の設定も変わります。
 実施前の Deployment は、このような警告がでていましたが、 Deploy が完了すると警告は消えます。つまり Deployment に対して Probe の設定が行われたということです。
 
-![msa15.png](./msa15.png)
+![msa15.png](./images/msa15.png)
 
 どのように設定されたのか見てみましょう。 catalog の Deployment Config のアクションメニューから、ヘルスチェックの編集を選択してください。
 
-![msa16.png](./msa16.png)
+![msa16.png](./images/msa16.png)
 
 緑字で「追加済みの Rediness プローブ」 というところをクリックすると、このように設定されていることが確認できます。
 
-![msa17.png](./msa17.png)
+![msa17.png](./images/msa17.png)
 
 ### ４．７. Kubernetes にスケーラブルなアプリケーションを配置することで得られるもの
 
@@ -1163,13 +1163,13 @@ oc get pods|grep Running
 
 Web Console より
 
-![resilience1.png](./resilience1.png)
+![resilience1.png](./images/resilience1.png)
 
 数を直接入れたい場合
 
-![resilience2.png](./resilience2.png)
+![resilience2.png](./images/resilience2.png)
 
-![resilience3.png](./resilience3.png)
+![resilience3.png](./images/resilience3.png)
 
 結果
 ```
@@ -1208,25 +1208,25 @@ done
 
 次はアプリケーションを断続的に停止します。Web Console の Administrator パースペクティブで Pod の一覧画面を開きます。
 
-![resilience4.png](./resilience4.png)
+![resilience4.png](./images/resilience4.png)
 
-![resilience5.png](./resilience5.png)
+![resilience5.png](./images/resilience5.png)
 
 Pod に Running のフィルターをかけます。
 
-![resilience6.png](./resilience6.png)
+![resilience6.png](./images/resilience6.png)
 
 Web Console と CLI でのアクセス実行状況が同時に見えるようにこのようにウィンドウを配置してください。（２画面以上あるかたはそれぞれ別画面で開いても OK です）
 
-![resilience7.png](./resilience7.png)
+![resilience7.png](./images/resilience7.png)
 
 Web Console から適当に Pod を選んで削除してみましょう。
 
-![resilience8.png](./resilience8.png)
+![resilience8.png](./images/resilience8.png)
 
 CLI にでるログに注目してください。概ね１秒毎にアクセスをしているので、 Date のところが１秒ずつ進んでいるはずです。
 
-![resilience9.png](./resilience9.png)
+![resilience9.png](./images/resilience9.png)
 
 Pod を何度も削除してみてください。そのたびにアプリケーションが起動してきて、このログが流れることを止めるが非常に難しいことが実感できるかと思います。
 
@@ -1264,11 +1264,11 @@ done
 止める場合は CTRL + C を押してください。
 
 結果
-![resilience10.png](./resilience10.png)
+![resilience10.png](./images/resilience10.png)
 
 Frontend をブラウザで開くと、このような画面が出ています。
 
-![resilience11.png](./resilience11.png)
+![resilience11.png](./images/resilience11.png)
 
 これは OpenShift Router が Frontend の Redady な Pod を探したものの、１つもないのでエラーで応答してくれているのでこのようにすぐにエラーが返却されています。
 
@@ -1292,7 +1292,7 @@ done
 ```
 
 結果
-![resilience12.png](./resilience12.png)
+![resilience12.png](./images/resilience12.png)
 
 エラーがすぐに返却されずに、504 Gateway Time-out が発生します。（しばらく 200 OK が交じるのはキャッシュの影響だとおもわれます）
 
@@ -1329,7 +1329,7 @@ done
 ```
 
 結果
-![resilience13.png](./resilience13.png)
+![resilience13.png](./images/resilience13.png)
 
 Catalog を止めたときと同じように Gateway Timeout が発生しました。
 
@@ -1361,7 +1361,7 @@ MSA における異常時の挙動は、にみなさんのご想像どおりだ�
 マイクロサービスのトラブルが発生するといったいどういうことがおきるのか、ということをすべて洗い出すのはなかなかに困難なミッションとなります。個別言語のライブラリや、 OS に属している TCP/IP ライブラリによっても少しずつ挙動が異なります。
 これらをまるっとどうにかしてしまおうというのが、 Servie Mesh という考え方です。Envoy Proxy をサイドカーとして Pod の中に埋め込み、 iptables を駆使して通信を横取りすることでマイクロサービスにおける通信をオーケストレーションしてしまおうというものです。
 
-![resilience14.png](./resilience14.png)
+![resilience14.png](./images/resilience14.png)
 
 「Service Mesh をいつ導入するべきか」、という問いに明確な答えはありません。
 導入の議論をしはじめる目安は、マイクロサービスを扱うビジネス・エンジニアのグループの単位が複数になるタイミングです。
@@ -1373,8 +1373,8 @@ MSA における異常時の挙動は、にみなさんのご想像どおりだ�
 
 ここから先は、「どの単位にマイクロサービスによいのか」、の深堀りが必要になってくるでしょう。その際は顧客側の体験と開発者側の体験、双方が重要になってきます。ビジネスとシステムの規模、複雑度、サービスを提供する組織のありかたなどの考慮が必要になります。
 
-![msa18.png](./msa18.png)
+![msa18.png](./images/msa18.png)
 
-![msa14.png](./msa14.png)
+![msa14.png](./images/msa14.png)
 
 マイクロサービスはビジネスを加速させるためのプラクティスですが、テクノロジーなしではマイクロサービスを正しく操ることはできません。サービスの最適な粒度を見つけるためには不断の努力を要しますが、苦労して分割・サイズダウンしたマイクロサービスが。再びモノリス化してしまわないように、コンテナプラットフォームの機能を活かしながらサービスの複雑さをコントロールしていってください。
