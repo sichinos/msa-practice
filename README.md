@@ -28,11 +28,18 @@
 ![picture 1](images/5fc57bc172500912a5c98450c3fa7cd237e569e3ab09d2c98c97b31f40d15b76.png)  
 
 
-次に、Web Terminal上から、OpenShift上にプロジェクト(名前: nginx-<ユーザー名>)を作成し、Nginx起動のために必要な操作を行います。
+次に、Web Terminal上から、OpenShift上にプロジェクト(名前: nginx-<ユーザー名>)を使用し(=講師により作成済みです)、Nginx起動のために必要な操作を行います。
 
 ```
-oc new-project nginx-$(oc whoami)
+oc project nginx-$(oc whoami)
 oc new-build --name=nginx-sample nginx:latest~"https://gitlab.com/openshift-starter-kit/msa-practice.git" --context-dir=resources/nginx -n nginx-$(oc whoami)
+```
+
+Build Podが起動するので、`oc logs -f <Pod名>`コマンドにより、`Push successful`メッセージが出力されるのを確認します。
+
+次に、以下コマンドにより、Nginx Podを起動、及び、Routeを作成します。
+
+```
 oc new-app nginx-sample -n nginx-$(oc whoami)
 oc expose svc nginx-sample -n nginx-$(oc whoami)
 ```
@@ -146,7 +153,7 @@ oc rsh -n nginx-$(oc whoami) nginx-sample-56c7576cbb-g7jdb
 echo Hello World >> /proc/1/fd/1
 ```
 
-次に、`oc logs`コマンドにより、ログメッセージが取得出来ることを確認します。
+次に、Remote Shell上で`exit`コマンドを実行しにより、Remote Shellからログアウトした後、`oc logs`コマンドにより、ログメッセージが取得出来ることを確認します。
 
 ```
 oc logs <Nginx Pod名>
@@ -172,7 +179,11 @@ OpenShift Web Consoleより、画面右上の格子状アイコン -> Loggingを
 
 ![picture 2](images/82d13b57904a14c37e0581ee6165c738f11cad07da224a3ace53ae4bda3c8b6e.png)  
 
-Kibanaログイン画面にてOpenShiftログインに使用するユーザー名とパスワードを使用してログインし、画面左メニューの`Discover`をクリックし、画面上部に表示される検索バーに、`kubernetes.namespace_name: nginx-<自分のユーザー名>`と入力します。これにより、Nginx Podが存在するプロジェクトに関するログ情報を取得します。
+Kibanaログイン画面にてOpenShiftログインに使用するユーザー名とパスワードを使用してログインし、`Authorize Access`画面にて、`Allow selected permissions`ボタンを押します。
+
+> 次に、もし、Index Patternの入力画面になる場合は、Step1のIndex Patternとして、`app*`を入力し、また、Step2のTime Filter filed nameとして、`@timestamp`を選択して下さい。
+
+その後、Kibana画面の左メニューの`Discover`をクリックし、画面上部に表示される検索バーに、`kubernetes.namespace_name: nginx-<自分のユーザー名>`と入力します。これにより、Nginx Podが存在するプロジェクトに関するログ情報を取得します。
 
 ![picture 3](images/efd330aab996e6a04b6b688bf8d4f6817cb1181753aff4b4c7582cfba72478e5.png)  
 
@@ -300,10 +311,10 @@ Deployment編集後、Nginxが自動的に再起動されます。再起動さ�
 oc delete pod <Nginx Pod名> -n nginx-$(oc whoami)
 ```
 
-再度、Nginx Podが起動するので、oc rshコマンドにより、Remote Shell接続し、PreStopで定義したメッセージが、sleep.logに出力されていることを確認します。
+再度、Nginx Podが起動するので、oc execコマンドにより、PreStopで定義したメッセージが、sleep.logに出力されていることを確認します。
 
 ```
-oc exec <Pod名> -c nginx-sample -n nginx-$(oc whoami) -- cat /opt/app-root/src/pv/sleep.log
+oc exec <Pod名> -n nginx-$(oc whoami) -- cat /opt/app-root/src/pv/sleep.log
 ```
 
 出力例
@@ -385,7 +396,7 @@ nginx-sample-1-build           0/1     Completed   0               18m
 nginx-sample-b6c95df5d-xxw4c   2/2     Running     1 (2m38s ago)   2m40
 ```
 
-また、動作確認として、以下コマンドにより、Metricsが取得出来ることを確認します。`nginx-sample-b6c95df5d-xxw4c`は、上述のoc get podで出力されるPod名に適宜置き換えて下さい。
+また、動作確認として、以下コマンドにより、Metricsが取得出来ることを確認します。`nginx-sample-b6c95df5d-xxw4c`は、上述のoc get podで出力されるPod名に適宜置き換えて下さい。また、Podに2つのコンテナが存在する状態であるため、`-c`オプションにより、oc execを実行する対象のコンテナを指定する必要がありますので、ご注意下さい。
 
 ```
 oc exec nginx-sample-b6c95df5d-xxw4c -c nginx-sample -n nginx-$(oc whoami) -- curl http://localhost:9113/metrics
@@ -468,7 +479,9 @@ EOF
 #### 1.5.3 動作確認
 動作確認として、OpenShift Web Consoleより、公開したMetricsが取得出来るかの確認を行います。
 
-OpenShift Web ConsoleをDeveloperビューで開き、左側メニューの監視をクリック => プロジェクト選択 => メトリクスクリック => クエリーの選択 => カスタムクエリーをクリック => `nginx`と入力します。
+OpenShift Web ConsoleをDeveloperビューで開き、左側メニューの監視をクリック => プロジェクト選択 => メトリクスクリック => クエリーの選択 => カスタムクエリーをクリック => `nginx`と入力し、Metricsの候補が出力されることを確認します。
+
+> Metricsの候補が出力されない場合は、画面をリロードした上でお試し下さい。
 
 ![picture 6](images/b96a416fb4e303f3df0d0a3f00dd69d1632b87e19be1ea008943145c6491c0a7.png)  
 
@@ -510,7 +523,13 @@ git clone https://gitlab.com/openshift-starter-kit/msa-practice.git
 oc start-build java-binary-app --from-file=./msa-practice/resources/spring-petclinic-2.7.3.jar -n java-$(oc whoami)
 ```
 
-動作確認として、作成したイメージよりPodを起動し、Route作成します。
+以下、上記コマンドのオプション説明です。
+- `--from-file`
+  - Binaryソースとして使用するファイルパスを指定
+
+Build Podが起動するので、`oc logs -f <Pod名>`コマンドにより、`Push successful`メッセージが出力されるのを確認します。
+
+次に、イメージ作成の動作確認として、作成したイメージよりPodを起動し、Route作成します。
 
 ```
 oc new-app java-binary-app -n java-$(oc whoami)
@@ -561,7 +580,9 @@ oc start-build python-docker-app --from-dir=./ -n python-$(oc whoami)
 - `--from-dir`
   - Dockerfileとその他関連ソースの存在するディレクトリを指定
 
-動作確認として、作成したイメージよりPodを起動し、Route作成します。
+Build Podが起動するので、`oc logs -f <Pod名>`コマンドにより、`Push successful`メッセージが出力されるのを確認します。
+
+次に、作成したイメージの動作確認として、作成したイメージよりPodを起動し、Route作成します。
 
 ```
 oc new-app python-docker-app -n python-$(oc whoami)
